@@ -436,26 +436,36 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>10. Reference Implementation Guidance</h2>
-      <div class="success">
-        <strong>The reference JS kernel should remain stable.</strong>
-      </div>
-      <p>The JS kernel serves as:</p>
-      <ul>
-        <li>reference implementation</li>
-        <li>conformance target</li>
-        <li>behaviorally complete baseline</li>
-      </ul>
-      <p><strong>Do NOT over-optimize it.</strong></p>
-      <p><strong>Instead:</strong></p>
-      <ul>
-        <li>freeze semantics</li>
-        <li>write conformance tests</li>
-        <li>allow other languages to re-implement</li>
-      </ul>
-      <p><strong>The protocol matters more than the kernel.</strong></p>
-    </div>
+  <h2>10. Implementation Guidance</h2>
+  <p>O-Lang is defined by its protocol semantics, not by any specific implementation. Multiple kernel implementations are expected and encouraged.</p>
 
+  <h3>10.1 Reference Implementation</h3>
+  <p>A reference implementation is provided to:</p>
+  <ul>
+    <li>demonstrate protocol semantics</li>
+    <li>serve as a conformance baseline</li>
+    <li>enable rapid ecosystem adoption</li>
+  </ul>
+  <p>The reference implementation is not normative — the specification takes precedence in all cases.</p>
+
+  <h3>10.2 Conformance Requirements</h3>
+  <p>All compliant implementations MUST:</p>
+  <ul>
+    <li>pass the official conformance test suite</li>
+    <li>adhere to normative sections of this specification</li>
+    <li>produce equivalent execution traces for identical inputs</li>
+  </ul>
+  <p>Implementation language, performance characteristics, and internal architecture are not constrained by this specification.</p>
+
+  <h3>10.3 Ecosystem Interoperability</h3>
+  <p>Kernels in different languages MUST interoperate at the protocol level:</p>
+  <ul>
+    <li>identical workflows produce equivalent contexts</li>
+    <li>resolver contracts are language-agnostic</li>
+    <li>audit trails are structurally consistent</li>
+  </ul>
+  <p>This ensures portability across environments while preserving governance guarantees.</p>
+</div>
     <div class="section">
       <h2>11. System Classification</h2>
       <p>O-Lang is not a developer framework, scripting language, or orchestration engine. It is a <strong>semantic governance protocol</strong> designed for systems-level integration.</p>
