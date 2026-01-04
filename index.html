@@ -235,7 +235,7 @@
         </ul>
       </div>
 
-      <h3>2.2 Workflow (Updated)</h3>
+      <h3>2.2 Workflow</h3>
       <p>A Workflow is a semantic contract, not a script.</p>
       <p><strong>Characteristics:</strong></p>
       <ul>
@@ -246,7 +246,7 @@
         <li>observable failure modes</li>
       </ul>
 
-      <h3>2.3 Resolver (Updated)</h3>
+      <h3>2.3 Resolver</h3>
       <p>A Resolver is an external capability boundary.</p>
       <p><strong>Resolvers may be:</strong></p>
       <ul>
@@ -296,7 +296,7 @@ Observed or Missing</pre>
       </div>
       <p><strong>Undefined ≠ null ≠ empty.</strong></p>
 
-      <h3>3.4 Partial Success (IMPORTANT)</h3>
+      <h3>3.4 Partial Success</h3>
       <p>O-Lang allows partial workflow success.</p>
       <p><strong>Example:</strong></p>
       <ul>
@@ -315,7 +315,7 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>4. Parallel Semantics (Clarified)</h2>
+      <h2>4. Parallel Semantics</h2>
       <p>Parallel execution is explicit, never inferred.</p>
       <div class="normative">
         <strong>The kernel MUST:</strong>
@@ -331,7 +331,7 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>5. Evolution Framework (Clarified & Grounded)</h2>
+      <h2>5. Evolution Framework</h2>
       
       <h3>5.1 Purpose</h3>
       <p>Evolve allows workflows to request resolver improvement without bypassing governance or mutating live systems.</p>
@@ -362,7 +362,7 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>Why Your Runtime Logs Are a FEATURE (Not a Bug)</h2>
+      <h2>6. Runtime Observability</h2>
       <div class="warning">
         <strong>This warning:</strong><br>
         <code>Cannot persist undefined value from "medical_summary"</code>
@@ -380,7 +380,7 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>Security Model (Confused Deputy Safe)</h2>
+      <h2>7. Security Model</h2>
       <p>O-Lang directly addresses the Confused Deputy Problem (Hardy, 1988).</p>
       <p><strong>Why orchestration-in-code fails:</strong></p>
       <ul>
@@ -398,7 +398,7 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>IoT & Edge Architecture (Concrete)</h2>
+      <h2>8. IoT & Edge Architecture</h2>
       <pre>[ Sensor / Actuator ]
 ↓
 [ Edge Resolver ]
@@ -418,15 +418,15 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>LangChain + O-Lang Integration (Real Answer)</h2>
+      <h2>9. LangChain Integration</h2>
       
-      <h3>LangChain inside O-Lang (Correct)</h3>
+      <h3>9.1 LangChain as a Resolver</h3>
       <p>LangChain is just another resolver.</p>
       <div class="integration-example">
         <code>Step 2: Ask langchain-agent "{query}" Save as answer</code>
       </div>
 
-      <h3>O-Lang inside LangChain (Also Valid)</h3>
+      <h3>9.2 Complementary Usage</h3>
       <p>LangChain builds the flow → O-Lang governs execution.</p>
       <div class="quote">
         <strong>Rule:</strong><br>
@@ -436,15 +436,15 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>Should You Leave the JS Kernel As-Is?</h2>
+      <h2>10. Reference Implementation Guidance</h2>
       <div class="success">
-        <strong>YES — ABSOLUTELY</strong>
+        <strong>The reference JS kernel should remain stable.</strong>
       </div>
-      <p>Your JS kernel is:</p>
+      <p>The JS kernel serves as:</p>
       <ul>
         <li>reference implementation</li>
         <li>conformance target</li>
-        <li>behaviorally complete</li>
+        <li>behaviorally complete baseline</li>
       </ul>
       <p><strong>Do NOT over-optimize it.</strong></p>
       <p><strong>Instead:</strong></p>
@@ -457,46 +457,17 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>How to Explain This Without "Selling"</h2>
-      
-      <h4>When asked: "Why not just use LangChain?"</h4>
-      <div class="quote">
-        LangChain helps you build AI flows.<br>
-        O-Lang helps you trust them in production.
-      </div>
-
-      <h4>When asked: "Isn't this more complex?"</h4>
-      <div class="quote">
-        The complexity already existed.<br>
-        O-Lang just makes it visible and governable.
-      </div>
-
-      <h4>When asked: "Is this a programming language?"</h4>
-      <div class="quote">
-        No. It's a runtime contract for intent.
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>Final Principle (Memorize This)</h2>
-      <div class="warning">
-        <strong>If orchestration logic can bypass the runtime,<br>
-        then orchestration does not exist.</strong>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>6. System Classification</h2>
+      <h2>11. System Classification</h2>
       <p>O-Lang is not a developer framework, scripting language, or orchestration engine. It is a <strong>semantic governance protocol</strong> designed for systems-level integration.</p>
 
-      <h3>6.1 What O-Lang Is Not</h3>
+      <h3>11.1 What O-Lang Is Not</h3>
       <ul>
         <li><strong>Not a DSL</strong> — O-Lang does not define domain logic or business rules.</li>
         <li><strong>Not a workflow engine</strong> — It does not execute steps, manage queues, or handle retries.</li>
         <li><strong>Not a LangChain alternative</strong> — It does not replace developer-facing AI composition tools.</li>
       </ul>
 
-      <h3>6.2 What O-Lang Is</h3>
+      <h3>11.2 What O-Lang Is</h3>
       <ul>
         <li><strong>A semantic execution layer</strong> — Enforces meaning, symbol validity, and intent fidelity across heterogeneous runtimes.</li>
         <li><strong>A governance boundary</strong> — Mediates all external capability invocations with policy, audit, and compliance enforcement.</li>
@@ -504,6 +475,14 @@ Observed or Missing</pre>
       </ul>
 
       <p>This classification ensures correct integration patterns and prevents misuse in contexts where developer-level orchestration is sufficient.</p>
+    </div>
+
+    <div class="section">
+      <h2>12. Final Principle</h2>
+      <div class="warning">
+        <strong>If orchestration logic can bypass the runtime,<br>
+        then orchestration does not exist.</strong>
+      </div>
     </div>
   </main>
 
