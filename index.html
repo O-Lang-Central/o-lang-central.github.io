@@ -1,11 +1,201 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>O-Lang Specification</title>
-    <meta charset='utf-8'>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>O-Lang Protocol — Open Specification for AI Orchestration</title>
+  <meta name="description" content="O-Lang is an open, vendor-neutral protocol for auditable, portable, and governable AI orchestration.">
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-dark: #1d3691;
+      --dark: #0f172a;
+      --light: #f8fafc;
+      --gray: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #f1f5f9;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      background: var(--light);
+      padding: 0;
+    }
+
+    header {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+    }
+
+    .header-content {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 1.125rem;
+      color: var(--gray);
+      font-weight: 500;
+    }
+
+    main {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .intro {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+    }
+
+    .intro p {
+      margin-bottom: 1rem;
+      font-size: 1.0625rem;
+    }
+
+    .spec-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .spec-section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.25rem;
+      color: var(--primary-dark);
+    }
+
+    .spec-list {
+      list-style: none;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .spec-item {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .spec-item:last-child {
+      border-bottom: none;
+    }
+
+    .spec-item a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .spec-item a:hover {
+      color: var(--primary-dark);
+    }
+
+    .spec-item .desc {
+      color: var(--gray);
+      font-size: 0.9375rem;
+      margin-top: 0.25rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--gray);
+      font-size: 0.875rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: var(--code-bg);
+      padding: 0.125rem 0.25rem;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.75rem; }
+      .header-content, main { padding: 0 1rem; }
+      .intro, .spec-section { padding: 1.5rem; }
+    }
+  </style>
 </head>
 <body>
-    <h1>O-Lang Protocol Specification</h1>
-    <p>Official specification for the O-Lang AI orchestration protocol.</p>
+  <header>
+    <div class="header-content">
+      <h1>O-Lang Protocol</h1>
+      <div class="subtitle">Open Specification for AI Orchestration</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="intro">
+      <p>
+        O-Lang is an <strong>open, vendor-neutral protocol</strong> for auditable, portable, and governable AI orchestration.
+      </p>
+      <p>
+        Unlike developer-centric frameworks, O-Lang operates at the <strong>execution governance layer</strong>—enabling organizations to certify, audit, and scale AI workflows across models, tools, and teams.
+      </p>
+    </div>
+
+    <div class="spec-section">
+      <h2>v1.0 Specification</h2>
+      <ul class="spec-list">
+        <li class="spec-item">
+          <a href="spec/v1.0/core-syntax.html">Core Syntax</a>
+          <div class="desc">Workflow structure, steps, blocks, and symbol binding</div>
+        </li>
+        <li class="spec-item">
+          <a href="spec/v1.0/semantic-enforcement.html">Semantic Enforcement</a>
+          <div class="desc">Symbol availability, graceful degradation, and context integrity</div>
+        </li>
+        <li class="spec-item">
+          <a href="spec/v1.0/policy-enforcement.html">Policy Enforcement</a>
+          <div class="desc">Resolver allow-listing, capability isolation, and compliance boundaries</div>
+        </li>
+        <li class="spec-item">
+          <a href="spec/v1.0/time-bound-execution.html">Time-Bound Execution</a>
+          <div class="desc">Parallel timeouts, escalation chains, and deterministic fallbacks</div>
+        </li>
+        <li class="spec-item">
+          <a href="spec/v1.0/determinism.html">Determinism & Auditability</a>
+          <div class="desc">Execution traces, reproducibility, and audit trails</div>
+        </li>
+      </ul>
+    </div>
+  </main>
+
+  <footer>
+    <p>
+      © 2026 O-Lang Protocol. Open specification licensed under CC-BY-SA.
+      <br>
+      <a href="https://github.com/O-Lang-Central/conformance" target="_blank">Conformance Test Suite</a>
+    </p>
+  </footer>
 </body>
 </html>
