@@ -295,6 +295,15 @@
       
       <h3>3.1 General Syntax Rules</h3>
       <p>O-Lang uses a line-oriented, English-like syntax. Whitespace is not significant except within quoted strings. All keywords are case-insensitive but conventionally capitalized.</p>
+      <div class="normative">
+  <strong>Normative Language:</strong>
+  <p>
+    The keywords <strong>MUST</strong>, <strong>MUST NOT</strong>,
+    <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong>
+    are to be interpreted as described in <strong>RFC 2119</strong>.
+  </p>
+</div>
+
 
       <h3>3.2 Top-Level Structure</h3>
       <pre>Workflow "&lt;name&gt;" [with &lt;param&gt;+]
@@ -397,6 +406,23 @@ Observed or Missing</pre>
           <li>what side-effects were skipped</li>
         </ul>
       </div>
+      <h3>4.5 Determinism Boundary (Normative)</h3>
+<div class="normative">
+  <p>
+    Given identical workflow definitions, resolver declarations, and resolver outputs,
+    all compliant kernels <strong>MUST</strong> produce:
+  </p>
+  <ul>
+    <li>identical symbol presence and absence</li>
+    <li>equivalent execution traces</li>
+    <li>identical policy decisions</li>
+  </ul>
+  <p>
+    Output content (e.g. LLM-generated text) may differ, but
+    <strong>semantic structure MUST NOT</strong>.
+  </p>
+</div>
+
     </div>
 
     <div class="section">
@@ -466,6 +492,33 @@ Observed or Missing</pre>
         <li><strong>In-process</strong>: language-native function call (for embedded use)</li>
       </ul>
       <p>The choice of interface is <strong>implementation-defined</strong> — the protocol only specifies <strong>what</strong> is called, not <strong>how</strong>.</p>
+      <h3>6.5 Resolver Declaration (Normative)</h3>
+<p>
+  Every resolver MUST expose a static declaration document describing its capabilities.
+</p>
+
+<pre>{
+  "id": "resolver.health.triage",
+  "intents": ["diagnose"],
+  "input_schema": {
+    "symptoms": "string[]"
+  },
+  "output_schema": {
+    "risk_level": "string"
+  },
+  "constraints": {
+    "jurisdiction": ["NG"]
+  }
+}</pre>
+
+<div class="normative">
+  <ul>
+    <li>Declarations MUST be static and machine-readable</li>
+    <li>Kernels MUST validate resolver behavior against its declaration</li>
+    <li>Undeclared behavior is a semantic violation</li>
+  </ul>
+</div>
+
     </div>
 
     <div class="section">
@@ -485,6 +538,29 @@ Observed or Missing</pre>
       this would silently write null, "", or crash later.</p>
       <p><strong>O-Lang makes meaning observable.</strong></p>
     </div>
+    <h3>7.1 Execution Trace Contract (Normative)</h3>
+<div class="normative">
+  <p>Kernels MUST emit structured, machine-readable execution traces.</p>
+</div>
+
+<pre>{
+  "workflow": "string",
+  "intent": "string",
+  "step": "number | null",
+  "resolver": "string | null",
+  "symbols_produced": ["symbol"],
+  "symbols_missing": ["symbol"],
+  "policy_decision": "allowed | blocked | skipped",
+  "timestamp": "ISO-8601",
+  "trace_id": "opaque-string"
+}</pre>
+
+<ul>
+  <li>Trace fields MUST be semantically equivalent across kernels</li>
+  <li>Trace emission MUST NOT be optional</li>
+  <li>Traces MUST correspond to actual execution events</li>
+</ul>
+
 
     <div class="section">
       <h2>8. Security Model</h2>
@@ -503,6 +579,37 @@ Observed or Missing</pre>
       </ul>
       <p><strong>Resolvers never gain power they weren't granted.</strong></p>
     </div>
+    <div class="section">
+  <h2>15. Error Semantics (Normative)</h2>
+
+  <p>All errors emitted by the kernel MUST be structured and classified.</p>
+
+  <pre>{
+  "code": "SYMBOL_UNDEFINED",
+  "message": "Symbol medical_summary was referenced but never produced",
+  "step": 4
+}</pre>
+
+  <h3>15.1 Standard Error Codes</h3>
+  <ul>
+    <li><code>INVALID_OLANG</code></li>
+    <li><code>UNDECLARED_RESOLVER</code></li>
+    <li><code>POLICY_VIOLATION</code></li>
+    <li><code>RESOLVER_FAILURE</code></li>
+    <li><code>SYMBOL_UNDEFINED</code></li>
+    <li><code>TIMEOUT</code></li>
+    <li><code>SEMANTIC_VIOLATION</code></li>
+  </ul>
+
+  <div class="normative">
+    <ul>
+      <li>Error codes MUST NOT vary across implementations</li>
+      <li>Error messages MAY vary</li>
+      <li>Errors MUST be emitted at the semantic level, not as raw exceptions</li>
+    </ul>
+  </div>
+</div>
+
 
     <div class="section">
       <h2>9. IoT & Edge Architecture</h2>
@@ -563,6 +670,20 @@ Observed or Missing</pre>
         <li>produce equivalent execution traces for identical inputs</li>
       </ul>
       <p>Implementation language, performance characteristics, and internal architecture are not constrained by this specification.</p>
+      <h3>11.4 Feature Compliance Matrix</h3>
+<table style="width:100%; border-collapse: collapse;">
+  <tr>
+    <th style="border:1px solid var(--border); padding:8px;">Feature</th>
+    <th style="border:1px solid var(--border); padding:8px;">Required</th>
+  </tr>
+  <tr><td>Parsing & Validation</td><td>Yes</td></tr>
+  <tr><td>Symbol Enforcement</td><td>Yes</td></tr>
+  <tr><td>Audit Traces</td><td>Yes</td></tr>
+  <tr><td>Parallel Execution</td><td>Yes</td></tr>
+  <tr><td>Timeout Handling</td><td>Yes</td></tr>
+  <tr><td>Escalation Chains</td><td>No</td></tr>
+  <tr><td>Determinism Tier</td><td>No</td></tr>
+</table>
 
       <h3>11.3 Ecosystem Interoperability</h3>
       <p>Kernels in different languages MUST interoperate at the protocol level:</p>
@@ -602,6 +723,34 @@ Observed or Missing</pre>
         then orchestration does not exist.</strong>
       </div>
     </div>
+    <div class="section">
+  <h2>14. Conformance Model (Normative)</h2>
+
+  <h3>14.1 Definition of Conformance</h3>
+  <p>
+    An implementation is considered <strong>O-Lang conformant</strong> if and only if it:
+  </p>
+  <ul>
+    <li>implements all normative requirements in this specification</li>
+    <li>produces equivalent semantic execution traces for identical workflows</li>
+    <li>passes all required tests in the official O-Lang Conformance Test Suite (OCTS)</li>
+  </ul>
+
+  <h3>14.2 Version Binding</h3>
+  <div class="normative">
+    <p>
+      Conformance is strictly version-bound.
+      Certification for <code>O-Lang/1.1</code> does not imply conformance with any other version.
+    </p>
+  </div>
+
+  <h3>14.3 Test Traceability</h3>
+  <p>
+    Every conformance test MUST reference one or more normative clauses in this specification.
+    No test may assert behavior not explicitly defined herein.
+  </p>
+</div>
+
   </main>
 
   <footer>
