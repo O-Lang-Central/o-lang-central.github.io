@@ -261,9 +261,64 @@
     </div>
 
     <div class="section">
-      <h2>3. Semantic Execution Model (Normative)</h2>
+      <h2>3. Syntax Grammar and Keywords (Normative)</h2>
       
-      <h3>3.1 Symbols</h3>
+      <h3>3.1 General Syntax Rules</h3>
+      <p>O-Lang uses a line-oriented, English-like syntax. Whitespace is not significant except within quoted strings. All keywords are case-insensitive but conventionally capitalized.</p>
+
+      <h3>3.2 Top-Level Structure</h3>
+      <pre>Workflow "&lt;name&gt;" [with &lt;param&gt;+]
+
+[Allow resolvers:
+- &lt;resolver-name&gt;]+
+
+&lt;step-or-block&gt;+
+
+Return &lt;symbol&gt;</pre>
+
+      <h3>3.3 Step Declaration</h3>
+      <pre>[Step &lt;n&gt;:] Ask "&lt;query&gt;" Save as &lt;symbol&gt;
+[Step &lt;n&gt;:] &lt;function&gt;(&lt;args&gt;) Save as &lt;symbol&gt;</pre>
+      <ul>
+        <li><code>Step &lt;n&gt;:</code> is optional and for human readability only</li>
+        <li><code>&lt;function&gt;</code> may be a built-in (e.g., <code>add</code>, <code>concat</code>) or resolver name</li>
+        <li><code>&lt;symbol&gt;</code> must be a single alphanumeric identifier (normalized by kernel)</li>
+      </ul>
+
+      <h3>3.4 Parallel Execution Blocks</h3>
+      <pre>Run in parallel [for &lt;duration&gt;]
+  &lt;step&gt;+
+End</pre>
+      <ul>
+        <li><code>&lt;duration&gt;</code>: integer followed by time unit (<code>ms</code>, <code>s</code>, <code>m</code>, <code>h</code>)</li>
+        <li>If <code>for</code> clause is omitted, block runs until all steps complete</li>
+        <li>All steps inside execute concurrently</li>
+        <li>Context is snapshotted before block entry</li>
+      </ul>
+
+      <h3>3.5 Conditional Logic</h3>
+      <pre>If &lt;condition&gt;:
+  &lt;step-or-block&gt;+
+[Else:
+  &lt;step-or-block&gt;+]
+EndIf</pre>
+      <ul>
+        <li><code>&lt;condition&gt;</code>: system-provided boolean symbols only (<code>timed_out</code>, <code>escalation_completed</code>)</li>
+        <li>User-defined symbols <strong>cannot</strong> be used in conditions (to preserve deterministic observability)</li>
+      </ul>
+
+      <h3>3.6 Persistence</h3>
+      <pre>Persist &lt;symbol&gt; to "&lt;filepath&gt;"</pre>
+      <ul>
+        <li>Fails if <code>&lt;symbol&gt;</code> is undefined (semantic enforcement)</li>
+        <li><code>&lt;filepath&gt;</code> is relative to execution environment’s output directory</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>4. Semantic Execution Model (Normative)</h2>
+      
+      <h3>4.1 Symbols</h3>
       <p>A symbol is any named value referenced in a workflow:</p>
       <ul>
         <li>inputs</li>
@@ -273,7 +328,7 @@
       </ul>
       <p>Symbols are tracked explicitly by the kernel.</p>
 
-      <h3>3.2 Symbol Lifecycle</h3>
+      <h3>4.2 Symbol Lifecycle</h3>
       <pre>Declared / Referenced
 ↓
 Produced by Resolver  
@@ -284,7 +339,7 @@ Consumed or Persisted
 ↓
 Observed or Missing</pre>
 
-      <h3>3.3 Semantic Enforcement Rules</h3>
+      <h3>4.3 Semantic Enforcement Rules</h3>
       <div class="normative">
         <strong>The kernel MUST:</strong>
         <ul>
@@ -296,7 +351,7 @@ Observed or Missing</pre>
       </div>
       <p><strong>Undefined ≠ null ≠ empty.</strong></p>
 
-      <h3>3.4 Partial Success</h3>
+      <h3>4.4 Partial Success</h3>
       <p>O-Lang allows partial workflow success.</p>
       <p><strong>Example:</strong></p>
       <ul>
@@ -315,54 +370,76 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>4. Parallel Semantics</h2>
-      <p>Parallel execution is explicit, never inferred.</p>
-      <div class="normative">
-        <strong>The kernel MUST:</strong>
-        <ul>
-          <li>snapshot context before parallel blocks</li>
-          <li>merge only resolved symbols</li>
-          <li>discard unresolved or timed-out symbols</li>
-          <li>preserve deterministic post-state</li>
-        </ul>
-      </div>
-      <p><strong>No race conditions.<br>
-      No hidden state mutation.</strong></p>
-    </div>
-
-    <div class="section">
-      <h2>5. Evolution Framework</h2>
+      <h2>5. Parallel and Timed Execution Semantics (Normative)</h2>
       
-      <h3>5.1 Purpose</h3>
-      <p>Evolve allows workflows to request resolver improvement without bypassing governance or mutating live systems.</p>
+      <h3>5.1 Parallel Block Lifecycle</h3>
+      <ol>
+        <li>Kernel snapshots current context</li>
+        <li>Launches all steps in block concurrently</li>
+        <li>Waits up to <code>&lt;duration&gt;</code> (if specified)</li>
+        <li>Cancels any incomplete steps after timeout</li>
+        <li>Merges <strong>only successfully resolved symbols</strong> into post-block context</li>
+        <li>Sets <code>timed_out = true</code> if any step was cancelled</li>
+      </ol>
 
-      <h3>5.2 What Evolve Is NOT</h3>
+      <h3>5.2 Symbol Merge Rules</h3>
       <ul>
-        <li>NOT self-modifying code</li>
-        <li>NOT auto-updating models</li>
-        <li>NOT runtime mutation</li>
+        <li><strong>Resolved symbol</strong>: included in final context</li>
+        <li><strong>Unresolved symbol</strong>: discarded (not set to <code>null</code> or <code>undefined</code>)</li>
+        <li><strong>Partially failed block</strong>: still progresses to next workflow step</li>
+        <li><strong>No implicit error propagation</strong>: failure is observable but not exceptional</li>
       </ul>
 
-      <h3>5.3 What Evolve IS</h3>
-      <ul>
-        <li>a sandboxed feedback signal</li>
-        <li>an auditable evolution request</li>
-        <li>a controlled interface for LLM iteration</li>
-      </ul>
-
-      <h3>5.4 Kernel Responsibility</h3>
-      <div class="normative">
-        <strong>The kernel MUST:</strong>
-        <ul>
-          <li>capture evolve intent</li>
-          <li>emit structured feedback events</li>
-          <li>never apply changes automatically</li>
-        </ul>
-      </div>
+      <h3>5.3 Escalation Chains (Reserved)</h3>
+      <p>Syntax is reserved for multi-level timeout escalation. Not part of v1.1 core, but kernels MUST ignore unknown block types gracefully.</p>
     </div>
 
     <div class="section">
-      <h2>6. Runtime Observability</h2>
+      <h2>6. Resolver Contract and Multi-Language Support</h2>
+      
+      <h3>6.1 Resolver Invocation</h3>
+      <p>Resolvers are invoked via function-call syntax:</p>
+      <pre>medical-api("{symptoms}") Save as diagnosis</pre>
+      <ul>
+        <li>Kernel resolves function name against <code>Allow resolvers</code> list</li>
+        <li>If not allowed, kernel skips step and logs policy violation</li>
+      </ul>
+
+      <h3>6.2 Input/Output Contract</h3>
+      <ul>
+        <li><strong>Input</strong>: JSON-serializable context subset (only referenced symbols)</li>
+        <li><strong>Output</strong>: Single JSON value or error</li>
+        <li><strong>No side effects</strong>: resolvers cannot write files, call external APIs outside their sandbox, or modify global state</li>
+      </ul>
+
+      <h3>6.3 Multi-Language Implementation</h3>
+      <p>Resolvers may be implemented in <strong>any language</strong> that can:</p>
+      <ul>
+        <li>Read JSON input from stdin or HTTP request</li>
+        <li>Write JSON output to stdout or HTTP response</li>
+        <li>Exit with code 0 (success) or non-zero (failure)</li>
+      </ul>
+      <p><strong>Examples:</strong></p>
+      <ul>
+        <li><strong>Python</strong>: HTTP resolver with Flask/FastAPI</li>
+        <li><strong>JavaScript</strong>: Node.js subprocess or HTTP endpoint</li>
+        <li><strong>Rust</strong>: Native binary accepting JSON over stdin</li>
+        <li><strong>Go</strong>: gRPC or REST service</li>
+        <li><strong>Shell</strong>: Script that reads <code>$1</code> as JSON and outputs result</li>
+      </ul>
+
+      <h3>6.4 Kernel-Resolver Interface</h3>
+      <p>Kernels MUST support <strong>at least one</strong> of:</p>
+      <ul>
+        <li><strong>HTTP</strong>: <code>POST /resolve</code> with JSON payload</li>
+        <li><strong>Subprocess</strong>: spawn binary with JSON arg</li>
+        <li><strong>In-process</strong>: language-native function call (for embedded use)</li>
+      </ul>
+      <p>The choice of interface is <strong>implementation-defined</strong> — the protocol only specifies <strong>what</strong> is called, not <strong>how</strong>.</p>
+    </div>
+
+    <div class="section">
+      <h2>7. Runtime Observability</h2>
       <div class="warning">
         <strong>This warning:</strong><br>
         <code>Cannot persist undefined value from "medical_summary"</code>
@@ -380,7 +457,7 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>7. Security Model</h2>
+      <h2>8. Security Model</h2>
       <p>O-Lang directly addresses the Confused Deputy Problem (Hardy, 1988).</p>
       <p><strong>Why orchestration-in-code fails:</strong></p>
       <ul>
@@ -398,7 +475,7 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>8. IoT & Edge Architecture</h2>
+      <h2>9. IoT & Edge Architecture</h2>
       <pre>[ Sensor / Actuator ]
 ↓
 [ Edge Resolver ]
@@ -418,15 +495,15 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>9. LangChain Integration</h2>
+      <h2>10. LangChain Integration</h2>
       
-      <h3>9.1 LangChain as a Resolver</h3>
+      <h3>10.1 LangChain as a Resolver</h3>
       <p>LangChain is just another resolver.</p>
       <div class="integration-example">
         <code>Step 2: Ask langchain-agent "{query}" Save as answer</code>
       </div>
 
-      <h3>9.2 Complementary Usage</h3>
+      <h3>10.2 Complementary Usage</h3>
       <p>LangChain builds the flow → O-Lang governs execution.</p>
       <div class="quote">
         <strong>Rule:</strong><br>
@@ -436,48 +513,49 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-  <h2>10. Implementation Guidance</h2>
-  <p>O-Lang is defined by its protocol semantics, not by any specific implementation. Multiple kernel implementations are expected and encouraged.</p>
+      <h2>11. Implementation Guidance</h2>
+      <p>O-Lang is defined by its protocol semantics, not by any specific implementation. Multiple kernel implementations are expected and encouraged.</p>
 
-  <h3>10.1 Reference Implementation</h3>
-  <p>A reference implementation is provided to:</p>
-  <ul>
-    <li>demonstrate protocol semantics</li>
-    <li>serve as a conformance baseline</li>
-    <li>enable rapid ecosystem adoption</li>
-  </ul>
-  <p>The reference implementation is not normative — the specification takes precedence in all cases.</p>
+      <h3>11.1 Reference Implementation</h3>
+      <p>A reference implementation is provided to:</p>
+      <ul>
+        <li>demonstrate protocol semantics</li>
+        <li>serve as a conformance baseline</li>
+        <li>enable rapid ecosystem adoption</li>
+      </ul>
+      <p>The reference implementation is not normative — the specification takes precedence in all cases.</p>
 
-  <h3>10.2 Conformance Requirements</h3>
-  <p>All compliant implementations MUST:</p>
-  <ul>
-    <li>pass the official conformance test suite</li>
-    <li>adhere to normative sections of this specification</li>
-    <li>produce equivalent execution traces for identical inputs</li>
-  </ul>
-  <p>Implementation language, performance characteristics, and internal architecture are not constrained by this specification.</p>
+      <h3>11.2 Conformance Requirements</h3>
+      <p>All compliant implementations MUST:</p>
+      <ul>
+        <li>pass the official conformance test suite</li>
+        <li>adhere to normative sections of this specification</li>
+        <li>produce equivalent execution traces for identical inputs</li>
+      </ul>
+      <p>Implementation language, performance characteristics, and internal architecture are not constrained by this specification.</p>
 
-  <h3>10.3 Ecosystem Interoperability</h3>
-  <p>Kernels in different languages MUST interoperate at the protocol level:</p>
-  <ul>
-    <li>identical workflows produce equivalent contexts</li>
-    <li>resolver contracts are language-agnostic</li>
-    <li>audit trails are structurally consistent</li>
-  </ul>
-  <p>This ensures portability across environments while preserving governance guarantees.</p>
-</div>
+      <h3>11.3 Ecosystem Interoperability</h3>
+      <p>Kernels in different languages MUST interoperate at the protocol level:</p>
+      <ul>
+        <li>identical workflows produce equivalent contexts</li>
+        <li>resolver contracts are language-agnostic</li>
+        <li>audit trails are structurally consistent</li>
+      </ul>
+      <p>This ensures portability across environments while preserving governance guarantees.</p>
+    </div>
+
     <div class="section">
-      <h2>11. System Classification</h2>
+      <h2>12. System Classification</h2>
       <p>O-Lang is not a developer framework, scripting language, or orchestration engine. It is a <strong>semantic governance protocol</strong> designed for systems-level integration.</p>
 
-      <h3>11.1 What O-Lang Is Not</h3>
+      <h3>12.1 What O-Lang Is Not</h3>
       <ul>
         <li><strong>Not a DSL</strong> — O-Lang does not define domain logic or business rules.</li>
         <li><strong>Not a workflow engine</strong> — It does not execute steps, manage queues, or handle retries.</li>
         <li><strong>Not a LangChain alternative</strong> — It does not replace developer-facing AI composition tools.</li>
       </ul>
 
-      <h3>11.2 What O-Lang Is</h3>
+      <h3>12.2 What O-Lang Is</h3>
       <ul>
         <li><strong>A semantic execution layer</strong> — Enforces meaning, symbol validity, and intent fidelity across heterogeneous runtimes.</li>
         <li><strong>A governance boundary</strong> — Mediates all external capability invocations with policy, audit, and compliance enforcement.</li>
@@ -488,7 +566,7 @@ Observed or Missing</pre>
     </div>
 
     <div class="section">
-      <h2>12. Final Principle</h2>
+      <h2>13. Final Principle</h2>
       <div class="warning">
         <strong>If orchestration logic can bypass the runtime,<br>
         then orchestration does not exist.</strong>
