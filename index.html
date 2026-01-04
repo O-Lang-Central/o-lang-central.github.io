@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>O-Lang Protocol — Open Specification for AI Orchestration</title>
-  <meta name="description" content="O-Lang is an open, vendor-neutral protocol for auditable, portable, and governable AI orchestration.">
+  <title>O-Lang Protocol Specification v1.1</title>
+  <meta name="description" content="O-Lang is a semantic orchestration protocol for governing AI and automation workflows outside application code.">
   <style>
     :root {
       --primary: #1e40af;
@@ -14,6 +14,10 @@
       --gray: #64748b;
       --border: #e2e8f0;
       --code-bg: #f1f5f9;
+      --warning-bg: #fef3c7;
+      --warning-border: #f59e0b;
+      --success-bg: #dcfce7;
+      --success-border: #22c55e;
     }
 
     * {
@@ -33,28 +37,30 @@
     header {
       background: white;
       border-bottom: 1px solid var(--border);
-      padding: 1.5rem 2rem;
+      padding: 2rem;
+      text-align: center;
     }
 
     .header-content {
       max-width: 800px;
       margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
     }
 
     h1 {
-      font-size: 2.25rem;
+      font-size: 2.5rem;
       font-weight: 800;
       color: var(--primary);
       letter-spacing: -0.5px;
+      margin-bottom: 1rem;
     }
 
-    .subtitle {
-      font-size: 1.125rem;
-      color: var(--gray);
-      font-weight: 500;
+    .spec-meta {
+      background: var(--code-bg);
+      padding: 1rem;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      margin: 1rem 0;
     }
 
     main {
@@ -63,7 +69,7 @@
       padding: 0 1.5rem;
     }
 
-    .intro {
+    .section {
       background: white;
       padding: 2rem;
       border-radius: 8px;
@@ -71,54 +77,94 @@
       margin-bottom: 2rem;
     }
 
-    .intro p {
-      margin-bottom: 1rem;
-      font-size: 1.0625rem;
-    }
-
-    .spec-section {
-      background: white;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-
-    .spec-section h2 {
-      font-size: 1.5rem;
-      margin-bottom: 1.25rem;
+    .section h2 {
+      font-size: 1.75rem;
+      margin-bottom: 1.5rem;
       color: var(--primary-dark);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.5rem;
     }
 
-    .spec-list {
-      list-style: none;
-      display: grid;
-      gap: 1rem;
-    }
-
-    .spec-item {
-      padding: 0.75rem 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .spec-item:last-child {
-      border-bottom: none;
-    }
-
-    .spec-item a {
+    .section h3 {
+      font-size: 1.25rem;
+      margin: 1.5rem 0 1rem 0;
       color: var(--primary);
-      text-decoration: none;
-      font-weight: 600;
-      transition: color 0.2s;
     }
 
-    .spec-item a:hover {
-      color: var(--primary-dark);
+    .section h4 {
+      font-size: 1.1rem;
+      margin: 1.25rem 0 0.75rem 0;
+      color: var(--dark);
     }
 
-    .spec-item .desc {
+    p {
+      margin-bottom: 1rem;
+    }
+
+    ul, ol {
+      margin-bottom: 1rem;
+      padding-left: 1.5rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    pre {
+      background: var(--code-bg);
+      padding: 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.9rem;
+    }
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: var(--code-bg);
+      padding: 0.125rem 0.25rem;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+
+    .normative {
+      border-left: 4px solid var(--primary);
+      padding-left: 1rem;
+      margin: 1rem 0;
+      background: rgba(30, 64, 175, 0.05);
+    }
+
+    .warning {
+      background: var(--warning-bg);
+      border-left: 4px solid var(--warning-border);
+      padding: 1rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .success {
+      background: var(--success-bg);
+      border-left: 4px solid var(--success-border);
+      padding: 1rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .quote {
+      font-style: italic;
+      border-left: 3px solid var(--gray);
+      padding-left: 1rem;
+      margin: 1.5rem 0;
       color: var(--gray);
-      font-size: 0.9375rem;
-      margin-top: 0.25rem;
+    }
+
+    .integration-example {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      padding: 1rem;
+      border-radius: 6px;
+      margin: 1rem 0;
     }
 
     footer {
@@ -130,69 +176,340 @@
       margin-top: 2rem;
     }
 
-    code {
-      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-      background: var(--code-bg);
-      padding: 0.125rem 0.25rem;
-      border-radius: 4px;
-      font-size: 0.9em;
-    }
-
     @media (max-width: 600px) {
-      h1 { font-size: 1.75rem; }
+      h1 { font-size: 2rem; }
       .header-content, main { padding: 0 1rem; }
-      .intro, .spec-section { padding: 1.5rem; }
+      .section { padding: 1.5rem; }
     }
   </style>
 </head>
 <body>
   <header>
     <div class="header-content">
-      <h1>O-Lang Protocol</h1>
-      <div class="subtitle">Open Specification for AI Orchestration</div>
+      <h1>O-Lang Protocol Specification v1.1</h1>
+      <div class="spec-meta">
+        Protocol: O-Lang/1.1<br>
+        Status: Stable<br>
+        Audience: Runtime implementers, SDK authors, platform & systems engineers<br>
+        License: Apache 2.0
+      </div>
     </div>
   </header>
 
   <main>
-    <div class="intro">
-      <p>
-        O-Lang is an <strong>open, vendor-neutral protocol</strong> for auditable, portable, and governable AI orchestration.
-      </p>
-      <p>
-        Unlike developer-centric frameworks, O-Lang operates at the <strong>execution governance layer</strong>—enabling organizations to certify, audit, and scale AI workflows across models, tools, and teams.
-      </p>
+    <div class="section">
+      <h2>1. Purpose & Philosophy</h2>
+      <p>O-Lang is a semantic orchestration protocol for governing AI and automation workflows outside application code.</p>
+      <p>Unlike orchestration frameworks embedded in programming languages, O-Lang defines:</p>
+      <ul>
+        <li>a portable execution format</li>
+        <li>a runtime-enforced policy boundary</li>
+        <li>a resolver invocation contract</li>
+        <li>semantic enforcement of workflow meaning</li>
+      </ul>
+      <p><strong>O-Lang does not execute business logic.</strong><br>
+      It governs how logic is invoked, constrained, observed, and audited.</p>
     </div>
 
-    <div class="spec-section">
-      <h2>v1.0 Specification</h2>
-      <ul class="spec-list">
-        <li class="spec-item">
-          <a href="spec/v1.0/core-syntax.html">Core Syntax</a>
-          <div class="desc">Workflow structure, steps, blocks, and symbol binding</div>
-        </li>
-        <li class="spec-item">
-          <a href="spec/v1.0/semantic-enforcement.html">Semantic Enforcement</a>
-          <div class="desc">Symbol availability, graceful degradation, and context integrity</div>
-        </li>
-        <li class="spec-item">
-          <a href="spec/v1.0/policy-enforcement.html">Policy Enforcement</a>
-          <div class="desc">Resolver allow-listing, capability isolation, and compliance boundaries</div>
-        </li>
-        <li class="spec-item">
-          <a href="spec/v1.0/time-bound-execution.html">Time-Bound Execution</a>
-          <div class="desc">Parallel timeouts, escalation chains, and deterministic fallbacks</div>
-        </li>
-        <li class="spec-item">
-          <a href="spec/v1.0/determinism.html">Determinism & Auditability</a>
-          <div class="desc">Execution traces, reproducibility, and audit trails</div>
-        </li>
+    <div class="section">
+      <h2>2. Core Concepts</h2>
+      
+      <h3>2.1 Kernel (Normative)</h3>
+      <p>The Kernel is a semantic runtime, not an executor.</p>
+      <p>It is responsible for:</p>
+      <ul>
+        <li>parsing workflows</li>
+        <li>validating resolver eligibility</li>
+        <li>enforcing execution policy</li>
+        <li>tracking symbol lifecycles</li>
+        <li>detecting semantic violations</li>
+        <li>producing auditable outputs</li>
       </ul>
+      <div class="normative">
+        <strong>A kernel MUST NOT:</strong>
+        <ul>
+          <li>embed domain logic</li>
+          <li>infer missing values</li>
+          <li>silently ignore failures</li>
+          <li>bypass resolver restrictions</li>
+        </ul>
+      </div>
+
+      <h3>2.2 Workflow (Updated)</h3>
+      <p>A Workflow is a semantic contract, not a script.</p>
+      <p><strong>Characteristics:</strong></p>
+      <ul>
+        <li>deterministic step order</li>
+        <li>immutable inputs</li>
+        <li>symbol-tracked outputs</li>
+        <li>stateless execution</li>
+        <li>observable failure modes</li>
+      </ul>
+
+      <h3>2.3 Resolver (Updated)</h3>
+      <p>A Resolver is an external capability boundary.</p>
+      <p><strong>Resolvers may be:</strong></p>
+      <ul>
+        <li>HTTP services</li>
+        <li>local binaries</li>
+        <li>containers</li>
+        <li>edge services</li>
+        <li>IoT hardware interfaces</li>
+      </ul>
+      <p><strong>Resolvers are never trusted.</strong><br>
+      All resolver results are validated by the kernel, not assumed correct.</p>
+    </div>
+
+    <div class="section">
+      <h2>3. Semantic Execution Model (Normative)</h2>
+      
+      <h3>3.1 Symbols</h3>
+      <p>A symbol is any named value referenced in a workflow:</p>
+      <ul>
+        <li>inputs</li>
+        <li>step outputs (<code>Save as</code>)</li>
+        <li>emitted values</li>
+        <li>persisted values</li>
+      </ul>
+      <p>Symbols are tracked explicitly by the kernel.</p>
+
+      <h3>3.2 Symbol Lifecycle</h3>
+      <pre>Declared / Referenced
+↓
+Produced by Resolver  
+↓
+Available in Context
+↓
+Consumed or Persisted
+↓
+Observed or Missing</pre>
+
+      <h3>3.3 Semantic Enforcement Rules</h3>
+      <div class="normative">
+        <strong>The kernel MUST:</strong>
+        <ul>
+          <li>detect when a symbol is referenced but undefined</li>
+          <li>prevent persistence of undefined symbols</li>
+          <li>emit warnings for partial execution</li>
+          <li>never fabricate missing values</li>
+        </ul>
+      </div>
+      <p><strong>Undefined ≠ null ≠ empty.</strong></p>
+
+      <h3>3.4 Partial Success (IMPORTANT)</h3>
+      <p>O-Lang allows partial workflow success.</p>
+      <p><strong>Example:</strong></p>
+      <ul>
+        <li>Step A succeeds</li>
+        <li>Step B fails to produce output</li>
+        <li>Step C still executes</li>
+      </ul>
+      <div class="normative">
+        <strong>The kernel MUST surface:</strong>
+        <ul>
+          <li>which symbols are missing</li>
+          <li>where they were expected</li>
+          <li>what side-effects were skipped</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>4. Parallel Semantics (Clarified)</h2>
+      <p>Parallel execution is explicit, never inferred.</p>
+      <div class="normative">
+        <strong>The kernel MUST:</strong>
+        <ul>
+          <li>snapshot context before parallel blocks</li>
+          <li>merge only resolved symbols</li>
+          <li>discard unresolved or timed-out symbols</li>
+          <li>preserve deterministic post-state</li>
+        </ul>
+      </div>
+      <p><strong>No race conditions.<br>
+      No hidden state mutation.</strong></p>
+    </div>
+
+    <div class="section">
+      <h2>5. Evolution Framework (Clarified & Grounded)</h2>
+      
+      <h3>5.1 Purpose</h3>
+      <p>Evolve allows workflows to request resolver improvement without bypassing governance or mutating live systems.</p>
+
+      <h3>5.2 What Evolve Is NOT</h3>
+      <ul>
+        <li>NOT self-modifying code</li>
+        <li>NOT auto-updating models</li>
+        <li>NOT runtime mutation</li>
+      </ul>
+
+      <h3>5.3 What Evolve IS</h3>
+      <ul>
+        <li>a sandboxed feedback signal</li>
+        <li>an auditable evolution request</li>
+        <li>a controlled interface for LLM iteration</li>
+      </ul>
+
+      <h3>5.4 Kernel Responsibility</h3>
+      <div class="normative">
+        <strong>The kernel MUST:</strong>
+        <ul>
+          <li>capture evolve intent</li>
+          <li>emit structured feedback events</li>
+          <li>never apply changes automatically</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Why Your Runtime Logs Are a FEATURE (Not a Bug)</h2>
+      <div class="warning">
+        <strong>This warning:</strong><br>
+        <code>Cannot persist undefined value from "medical_summary"</code>
+      </div>
+      <p><strong>Means:</strong></p>
+      <ul>
+        <li>The symbol existed in intent</li>
+        <li>It did NOT exist in reality</li>
+        <li>The kernel refused to lie</li>
+      </ul>
+      <p><strong>This is semantic truth enforcement.</strong></p>
+      <p>In most frameworks:<br>
+      this would silently write null, "", or crash later.</p>
+      <p><strong>O-Lang makes meaning observable.</strong></p>
+    </div>
+
+    <div class="section">
+      <h2>Security Model (Confused Deputy Safe)</h2>
+      <p>O-Lang directly addresses the Confused Deputy Problem (Hardy, 1988).</p>
+      <p><strong>Why orchestration-in-code fails:</strong></p>
+      <ul>
+        <li>execution authority == developer authority</li>
+        <li>tools inherit permissions implicitly</li>
+        <li>no runtime enforcement layer</li>
+      </ul>
+      <p><strong>O-Lang solution:</strong></p>
+      <ul>
+        <li>workflow intent ≠ execution authority</li>
+        <li>resolvers explicitly allowed</li>
+        <li>kernel mediates every invocation</li>
+      </ul>
+      <p><strong>Resolvers never gain power they weren't granted.</strong></p>
+    </div>
+
+    <div class="section">
+      <h2>IoT & Edge Architecture (Concrete)</h2>
+      <pre>[ Sensor / Actuator ]
+↓
+[ Edge Resolver ]
+↓
+[ O-Lang Kernel ]
+↓
+[ Policy / Audit / Control Plane ]</pre>
+      <p><strong>Why O-Lang fits IoT better than code orchestration:</strong></p>
+      <ul>
+        <li>offline-safe</li>
+        <li>deterministic replay</li>
+        <li>hardware isolation</li>
+        <li>auditable decisions</li>
+        <li>no dynamic code execution</li>
+      </ul>
+      <p><strong>O-Lang governs when hardware is touched — not how.</strong></p>
+    </div>
+
+    <div class="section">
+      <h2>LangChain + O-Lang Integration (Real Answer)</h2>
+      
+      <h3>LangChain inside O-Lang (Correct)</h3>
+      <p>LangChain is just another resolver.</p>
+      <div class="integration-example">
+        <code>Step 2: Ask langchain-agent "{query}" Save as answer</code>
+      </div>
+
+      <h3>O-Lang inside LangChain (Also Valid)</h3>
+      <p>LangChain builds the flow → O-Lang governs execution.</p>
+      <div class="quote">
+        <strong>Rule:</strong><br>
+        LangChain may construct intent<br>
+        O-Lang must enforce execution
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Should You Leave the JS Kernel As-Is?</h2>
+      <div class="success">
+        <strong>YES — ABSOLUTELY</strong>
+      </div>
+      <p>Your JS kernel is:</p>
+      <ul>
+        <li>reference implementation</li>
+        <li>conformance target</li>
+        <li>behaviorally complete</li>
+      </ul>
+      <p><strong>Do NOT over-optimize it.</strong></p>
+      <p><strong>Instead:</strong></p>
+      <ul>
+        <li>freeze semantics</li>
+        <li>write conformance tests</li>
+        <li>allow other languages to re-implement</li>
+      </ul>
+      <p><strong>The protocol matters more than the kernel.</strong></p>
+    </div>
+
+    <div class="section">
+      <h2>How to Explain This Without "Selling"</h2>
+      
+      <h4>When asked: "Why not just use LangChain?"</h4>
+      <div class="quote">
+        LangChain helps you build AI flows.<br>
+        O-Lang helps you trust them in production.
+      </div>
+
+      <h4>When asked: "Isn't this more complex?"</h4>
+      <div class="quote">
+        The complexity already existed.<br>
+        O-Lang just makes it visible and governable.
+      </div>
+
+      <h4>When asked: "Is this a programming language?"</h4>
+      <div class="quote">
+        No. It's a runtime contract for intent.
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Final Principle (Memorize This)</h2>
+      <div class="warning">
+        <strong>If orchestration logic can bypass the runtime,<br>
+        then orchestration does not exist.</strong>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>6. System Classification</h2>
+      <p>O-Lang is not a developer framework, scripting language, or orchestration engine. It is a <strong>semantic governance protocol</strong> designed for systems-level integration.</p>
+
+      <h3>6.1 What O-Lang Is Not</h3>
+      <ul>
+        <li><strong>Not a DSL</strong> — O-Lang does not define domain logic or business rules.</li>
+        <li><strong>Not a workflow engine</strong> — It does not execute steps, manage queues, or handle retries.</li>
+        <li><strong>Not a LangChain alternative</strong> — It does not replace developer-facing AI composition tools.</li>
+      </ul>
+
+      <h3>6.2 What O-Lang Is</h3>
+      <ul>
+        <li><strong>A semantic execution layer</strong> — Enforces meaning, symbol validity, and intent fidelity across heterogeneous runtimes.</li>
+        <li><strong>A governance boundary</strong> — Mediates all external capability invocations with policy, audit, and compliance enforcement.</li>
+        <li><strong>An AI systems primitive</strong> — Provides the missing contract between application intent and infrastructure execution in regulated AI environments.</li>
+      </ul>
+
+      <p>This classification ensures correct integration patterns and prevents misuse in contexts where developer-level orchestration is sufficient.</p>
     </div>
   </main>
 
   <footer>
     <p>
-      © 2026 O-Lang Protocol. Open specification licensed under CC-BY-SA.
+      © 2026 O-Lang Protocol. Open specification licensed under Apache 2.0.
       <br>
       <a href="https://github.com/O-Lang-Central/conformance" target="_blank">Conformance Test Suite</a>
     </p>
