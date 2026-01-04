@@ -197,19 +197,49 @@
   </header>
 
   <main>
-    <div class="section">
-      <h2>1. Purpose & Philosophy</h2>
-      <p>O-Lang is a semantic orchestration protocol for governing AI and automation workflows outside application code.</p>
-      <p>Unlike orchestration frameworks embedded in programming languages, O-Lang defines:</p>
-      <ul>
-        <li>a portable execution format</li>
-        <li>a runtime-enforced policy boundary</li>
-        <li>a resolver invocation contract</li>
-        <li>semantic enforcement of workflow meaning</li>
-      </ul>
-      <p><strong>O-Lang does not execute business logic.</strong><br>
-      It governs how logic is invoked, constrained, observed, and audited.</p>
-    </div>
+   <div class="section">
+  <h2>1. Purpose & Philosophy</h2>
+  
+  <h3>1.1 The Autonomy Crisis in AI Systems</h3>
+  <p>Current AI architectures grant <strong>unbounded autonomy</strong> to agents and LLMs. Developers construct workflows that:</p>
+  <ul>
+    <li>execute arbitrary code with full system permissions</li>
+    <li>make decisions without audit trails or policy constraints</li>
+    <li>bypass governance through embedded orchestration logic</li>
+    <li>produce non-reproducible, non-deterministic outcomes</li>
+  </ul>
+  <p>This creates <strong>unacceptable risk</strong> in regulated environments (healthcare, finance, government) where AI decisions impact human lives, compliance, and legal liability.</p>
+
+  <h3>1.2 From Agents to Governance</h3>
+  <p>The industry is transitioning from <strong>autonomous agents</strong> to <strong>governable coordinators</strong>. O-Lang enables this shift by:</p>
+  <ul>
+    <li><strong>Separating intent from execution</strong> — Workflow definitions declare <em>what</em> should happen, not <em>how</em> it should be implemented</li>
+    <li><strong>Enforcing policy at runtime</strong> — Every resolver invocation is mediated by the kernel against explicit allow-lists and constraints</li>
+    <li><strong>Making meaning observable</strong> — Symbol validity, partial success, and semantic violations are surfaced as first-class runtime events</li>
+    <li><strong>Providing deterministic auditability</strong> — Identical inputs produce identical execution traces across all compliant implementations</li>
+  </ul>
+
+  <h3>1.3 The Governance Gap</h3>
+  <p>Existing orchestration frameworks (LangChain, LlamaIndex, etc.) operate <strong>inside application code</strong>, where:</p>
+  <ul>
+    <li>developer authority = execution authority</li>
+    <li>tools inherit permissions implicitly</li>
+    <li>no runtime enforcement layer exists</li>
+    <li>compliance is retrofitted, not built-in</li>
+  </ul>
+  <p>O-Lang closes this gap by providing a <strong>runtime-enforced governance boundary</strong> that exists <em>outside</em> application code.</p>
+
+  <h3>1.4 What O-Lang Provides</h3>
+  <p>O-Lang defines a portable protocol for:</p>
+  <ul>
+    <li><strong>Portable execution format</strong> — Workflows are language-agnostic, versionable, and human-readable</li>
+    <li><strong>Runtime-enforced policy boundary</strong> — Resolvers are explicitly allowed, never trusted</li>
+    <li><strong>Resolver invocation contract</strong> — Standardized I/O, sandboxing, and error handling across all capabilities</li>
+    <li><strong>Semantic enforcement of workflow meaning</strong> — Symbols must exist in reality, not just in intent</li>
+  </ul>
+  <p><strong>O-Lang does not execute business logic.</strong><br>
+  It governs how logic is invoked, constrained, observed, and audited — transforming AI from autonomous agents to <strong>governable, certifiable systems</strong>.</p>
+</div>
 
     <div class="section">
       <h2>2. Core Concepts</h2>
