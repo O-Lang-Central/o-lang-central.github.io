@@ -1,11 +1,178 @@
 <!DOCTYPE html>
-<html>
-<head><title>O-Lang Protocol</title></head>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>O-Lang Protocol</title>
+  <meta name="description" content="O-Lang: A semantic governance protocol for AI orchestration outside application code.">
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-dark: #1d3691;
+      --dark: #0f172a;
+      --light: #f8fafc;
+      --gray: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #f1f5f9;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      background: var(--light);
+    }
+
+    header {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    h1 {
+      font-size: 2.75rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+      margin-bottom: 1rem;
+    }
+
+    .subtitle {
+      font-size: 1.125rem;
+      color: var(--gray);
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .card h2 {
+      font-size: 1.5rem;
+      color: var(--primary-dark);
+      margin-bottom: 1.25rem;
+    }
+
+    .versions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .version-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: var(--code-bg);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.95rem;
+    }
+
+    .version-item a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .version-item a:hover {
+      text-decoration: underline;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      color: var(--gray);
+      font-size: 0.875rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 2.25rem; }
+      .subtitle { font-size: 1rem; }
+      .card { padding: 1.5rem; }
+    }
+  </style>
+</head>
 <body>
-  <h1>O-Lang Protocol Specification</h1>
-  <ul>
-    <li><a href="spec/v1.1.html">v1.1 (current stable)</a></li>
-  </ul>
-  <p>Official specification for the O-Lang AI orchestration protocol.</p>
+  <header>
+    <div class="container">
+      <h1>O-Lang Protocol</h1>
+      <p class="subtitle">A semantic governance protocol for AI orchestration outside application code.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <h2>Specification Versions</h2>
+      <div class="versions">
+        <div class="version-item">
+          <span>Stable (Under Review)</span>
+          <a href="spec/v1.1.html">v1.1</a>
+        </div>
+        <!-- Add future versions here -->
+        <!--
+        <div class="version-item">
+          <span>Latest</span>
+          <a href="spec/v1.2.html">v1.2</a>
+        </div>
+        -->
+      </div>
+    </div>
+
+   <div class="card">
+  <h2>About O-Lang</h2>
+  <p>
+    O-Lang is <strong>not an orchestration framework</strong>. It is a <strong>semantic governance protocol</strong> 
+    that operates <em>outside application code</em> to enforce policy, validate meaning, and govern AI execution.
+  </p>
+  <p style="margin-top: 1rem;">
+    It provides a <strong>runtime-enforced boundary</strong> between developer intent and system action—ensuring 
+    workflows are deterministic, auditable, and compliant by design.
+  </p>
+  <p style="margin-top: 1rem;">
+    Built for regulated domains where <strong>semantic truth</strong> and <strong>governable coordination</strong> 
+    are non-negotiable.
+  </p>
+</div>
+  </main>
+
+  <footer class="footer">
+    <p>
+      Maintained by the <a href="https://github.com/O-Lang-Central" target="_blank">O-Lang Core Team</a> • 
+      <a href="https://github.com/O-Lang-Central/conformance" target="_blank">Conformance Suite</a> • 
+      Licensed under <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache 2.0</a>
+    </p>
+    <p style="margin-top: 0.5rem;">
+      © 2026 O-Lang Protocol
+    </p>
+  </footer>
 </body>
 </html>
