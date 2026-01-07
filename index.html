@@ -189,7 +189,7 @@
       <h1>O-Lang Protocol Specification v1.1</h1>
       <div class="spec-meta">
         Protocol: O-Lang/1.1<br>
-        Status: Stable<br>
+        Status: Stable — Open for Review (Clarifications Only)<br>
         Audience: Runtime implementers, SDK authors, platform & systems engineers<br>
         License: Apache 2.0
       </div>
@@ -239,6 +239,14 @@
   </ul>
   <p><strong>O-Lang does not execute business logic.</strong><br>
   It governs how logic is invoked, constrained, observed, and audited — transforming AI from autonomous agents to <strong>governable, certifiable systems</strong>.</p>
+
+  <h3>1.5 Trust vs Conformance</h3>
+  <p>O-Lang distinguishes between <strong>conformance</strong> and <strong>trust</strong>:</p>
+  <ul>
+    <li><strong>Conformance</strong> validates that a resolver declaration adheres to the O-Lang Resolver Contract (inputs, outputs, steps, failures).</li>
+    <li><strong>Trust</strong> is established by the runtime kernel, which enforces policy, validates resolver behavior, and mediates all external interactions.</li>
+  </ul>
+  <p>A resolver may be <em>conformant</em> but not <em>trusted</em> — certification of entire packages (including runtime behavior) is a separate governance layer beyond static conformance.</p>
 </div>
 
     <div class="section">
@@ -465,7 +473,7 @@ Observed or Missing</pre>
       <ul>
         <li><strong>Input</strong>: JSON-serializable context subset (only referenced symbols)</li>
         <li><strong>Output</strong>: Single JSON value or error</li>
-        <li><strong>No side effects</strong>: resolvers cannot write files, call external APIs outside their sandbox, or modify global state</li>
+        <li><strong>No side effects outside declared and kernel-permitted boundaries</strong></li>
       </ul>
 
       <h3>6.3 Multi-Language Implementation</h3>
@@ -665,26 +673,13 @@ Observed or Missing</pre>
       <h3>11.2 Conformance Requirements</h3>
       <p>All compliant implementations MUST:</p>
       <ul>
-        <li>pass the official conformance test suite</li>
-        <li>adhere to normative sections of this specification</li>
-        <li>produce equivalent execution traces for identical inputs</li>
+        <li>implement all normative requirements in this specification</li>
+        <li>produce equivalent semantic execution traces for identical inputs</li>
+        <li>pass all required tests in the official O-Lang Conformance Test Suite (OCTS)</li>
+        <li>Passing conformance tests does not imply runtime trust or certification.</li>
       </ul>
       <p>Implementation language, performance characteristics, and internal architecture are not constrained by this specification.</p>
-      <h3>11.4 Feature Compliance Matrix</h3>
-<table style="width:100%; border-collapse: collapse;">
-  <tr>
-    <th style="border:1px solid var(--border); padding:8px;">Feature</th>
-    <th style="border:1px solid var(--border); padding:8px;">Required</th>
-  </tr>
-  <tr><td>Parsing & Validation</td><td>Yes</td></tr>
-  <tr><td>Symbol Enforcement</td><td>Yes</td></tr>
-  <tr><td>Audit Traces</td><td>Yes</td></tr>
-  <tr><td>Parallel Execution</td><td>Yes</td></tr>
-  <tr><td>Timeout Handling</td><td>Yes</td></tr>
-  <tr><td>Escalation Chains</td><td>No</td></tr>
-  <tr><td>Determinism Tier</td><td>No</td></tr>
-</table>
-
+      
       <h3>11.3 Ecosystem Interoperability</h3>
       <p>Kernels in different languages MUST interoperate at the protocol level:</p>
       <ul>
@@ -693,6 +688,21 @@ Observed or Missing</pre>
         <li>audit trails are structurally consistent</li>
       </ul>
       <p>This ensures portability across environments while preserving governance guarantees.</p>
+      
+      <h3>11.4 Feature Compliance Matrix</h3>
+      <table style="width:100%; border-collapse: collapse;">
+        <tr>
+          <th style="border:1px solid var(--border); padding:8px;">Feature</th>
+          <th style="border:1px solid var(--border); padding:8px;">Required</th>
+        </tr>
+        <tr><td>Parsing & Validation</td><td>Yes</td></tr>
+        <tr><td>Symbol Enforcement</td><td>Yes</td></tr>
+        <tr><td>Audit Traces</td><td>Yes</td></tr>
+        <tr><td>Parallel Execution</td><td>Yes</td></tr>
+        <tr><td>Timeout Handling</td><td>Yes</td></tr>
+        <tr><td>Escalation Chains</td><td>No</td></tr>
+        <tr><td>Determinism Tier</td><td>No</td></tr>
+      </table>
     </div>
 
     <div class="section">
@@ -712,6 +722,16 @@ Observed or Missing</pre>
         <li><strong>A governance boundary</strong> — Mediates all external capability invocations with policy, audit, and compliance enforcement.</li>
         <li><strong>An AI systems primitive</strong> — Provides the missing contract between application intent and infrastructure execution in regulated AI environments.</li>
       </ul>
+
+      <h3>12.3 Non-Goals for v1.1</h3>
+      <p>This specification intentionally does not define:</p>
+      <ul>
+        <li>Action handler certification</li>
+        <li>Package registry governance</li>
+        <li>Economic trust or reputation models</li>
+        <li>Runtime sandboxing implementation details</li>
+      </ul>
+      <p>These topics are reserved for future versions under O-Lang Foundation governance.</p>
 
       <p>This classification ensures correct integration patterns and prevents misuse in contexts where developer-level orchestration is sufficient.</p>
     </div>
@@ -759,6 +779,12 @@ Observed or Missing</pre>
       <br>
       <a href="https://github.com/O-Lang-Central/conformance" target="_blank">Conformance Test Suite</a>
     </p>
+    <div class="success" style="margin-top: 1rem; padding: 0.75rem; font-size: 0.875rem;">
+      <strong>Review Note:</strong> This specification is open for technical review focused on 
+      clarity, consistency, and implementability. 
+      <strong>No new semantics will be accepted</strong> — feedback on v1.1 must be limited to 
+      clarification of existing intent. Semantic changes will be considered for v1.2.
+    </div>
   </footer>
 </body>
 </html>
