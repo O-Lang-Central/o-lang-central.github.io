@@ -60,9 +60,9 @@
     .card {
       background: white;
       border-radius: 12px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-      padding: 2rem;
-      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      padding: 2.5rem;
+      margin-bottom: 2.5rem;
     }
 
     .card h2 {
@@ -71,30 +71,39 @@
       margin-bottom: 1.25rem;
     }
 
-    .versions {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .version-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.75rem 1rem;
-      background: var(--code-bg);
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 0.95rem;
-    }
-
-    .version-item a {
+    .card h3 {
+      font-size: 1.25rem;
       color: var(--primary);
+      margin: 1.5rem 0 1rem;
+    }
+
+    ul {
+      padding-left: 1.5rem;
+      margin: 0.75rem 0 1.25rem;
+    }
+
+    li {
+      margin-bottom: 0.4rem;
+    }
+
+    .cta-card {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .cta-card a {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
       text-decoration: none;
       font-weight: 600;
+      margin-top: 1rem;
     }
 
-    .version-item a:hover {
-      text-decoration: underline;
+    .cta-card a:hover {
+      background: var(--primary-dark);
     }
 
     .footer {
@@ -110,14 +119,10 @@
       text-decoration: none;
     }
 
-    .footer a:hover {
-      text-decoration: underline;
-    }
-
     @media (max-width: 600px) {
       h1 { font-size: 2.25rem; }
       .subtitle { font-size: 1rem; }
-      .card { padding: 1.5rem; }
+      .card { padding: 1.75rem; }
     }
   </style>
 </head>
@@ -131,37 +136,61 @@
 
   <main class="container">
     <div class="card">
-      <h2>Specification Versions</h2>
-      <div class="versions">
-        <div class="version-item">
-          <span>Stable (Under Review)</span>
-          <a href="spec/v1.1.html">v1.1</a>
-        </div>
-        <!-- Add future versions here -->
-        <!--
-        <div class="version-item">
-          <span>Latest</span>
-          <a href="spec/v1.2.html">v1.2</a>
-        </div>
-        -->
-      </div>
+      <h2>1. Purpose & Philosophy</h2>
+
+      <h3>1.1 The Autonomy Crisis in AI Systems</h3>
+      <p>Current AI architectures grant <strong>unbounded autonomy</strong> to agents and LLMs. Developers construct workflows that:</p>
+      <ul>
+        <li>execute arbitrary code with full system permissions</li>
+        <li>make decisions without audit trails or policy constraints</li>
+        <li>bypass governance through embedded orchestration logic</li>
+        <li>produce non-reproducible, non-deterministic outcomes</li>
+      </ul>
+      <p>This creates <strong>unacceptable risk</strong> in regulated environments (healthcare, finance, government) where AI decisions impact human lives, compliance, and legal liability.</p>
+
+      <h3>1.2 From Agents to Governance</h3>
+      <p>The industry is transitioning from <strong>autonomous agents</strong> to <strong>governable coordinators</strong>. O-Lang enables this shift by:</p>
+      <ul>
+        <li><strong>Separating intent from execution</strong> — Workflow definitions declare <em>what</em> should happen, not <em>how</em> it should be implemented</li>
+        <li><strong>Enforcing policy at runtime</strong> — Every resolver invocation is mediated by the kernel against explicit allow-lists and constraints</li>
+        <li><strong>Making meaning observable</strong> — Symbol validity, partial success, and semantic violations are surfaced as first-class runtime events</li>
+        <li><strong>Providing deterministic auditability</strong> — Identical inputs produce identical execution traces across all compliant implementations</li>
+      </ul>
+
+      <h3>1.3 The Governance Gap</h3>
+      <p>Existing orchestration frameworks (LangChain, LlamaIndex, etc.) operate <strong>inside application code</strong>, where:</p>
+      <ul>
+        <li>developer authority = execution authority</li>
+        <li>tools inherit permissions implicitly</li>
+        <li>no runtime enforcement layer exists</li>
+        <li>compliance is retrofitted, not built-in</li>
+      </ul>
+      <p>O-Lang closes this gap by providing a <strong>runtime-enforced governance boundary</strong> that exists <em>outside</em> application code.</p>
+
+      <h3>1.4 What O-Lang Provides</h3>
+      <p>O-Lang defines a portable protocol for:</p>
+      <ul>
+        <li><strong>Portable execution format</strong> — Workflows are language-agnostic, versionable, and human-readable</li>
+        <li><strong>Runtime-enforced policy boundary</strong> — Resolvers are explicitly allowed, never trusted</li>
+        <li><strong>Resolver invocation contract</strong> — Standardized I/O, sandboxing, and error handling across all capabilities</li>
+        <li><strong>Semantic enforcement of workflow meaning</strong> — Symbols must exist in reality, not just in intent</li>
+      </ul>
+      <p><strong>O-Lang does not execute business logic.</strong><br>
+      It governs how logic is invoked, constrained, observed, and audited — transforming AI from autonomous agents to <strong>governable, certifiable systems</strong>.</p>
+
+      <h3>1.5 Trust vs Conformance</h3>
+      <p>O-Lang distinguishes between <strong>conformance</strong> and <strong>trust</strong>:</p>
+      <ul>
+        <li><strong>Conformance</strong> validates that a resolver declaration adheres to the O-Lang Resolver Contract (inputs, outputs, steps, failures).</li>
+        <li><strong>Trust</strong> is established by the runtime kernel, which enforces policy, validates resolver behavior, and mediates all external interactions.</li>
+      </ul>
+      <p>A resolver may be <em>conformant</em> but not <em>trusted</em> — certification of entire packages (including runtime behavior) is a separate governance layer beyond static conformance.</p>
     </div>
 
-   <div class="card">
-  <h2>About O-Lang</h2>
-  <p>
-    O-Lang is <strong>not an orchestration framework</strong>. It is a <strong>semantic governance protocol</strong> 
-    that operates <em>outside application code</em> to enforce policy, validate meaning, and govern AI execution.
-  </p>
-  <p style="margin-top: 1rem;">
-    It provides a <strong>runtime-enforced boundary</strong> between developer intent and system action—ensuring 
-    workflows are deterministic, auditable, and compliant by design.
-  </p>
-  <p style="margin-top: 1rem;">
-    Built for regulated domains where <strong>semantic truth</strong> and <strong>governable coordination</strong> 
-    are non-negotiable.
-  </p>
-</div>
+    <div class="cta-card">
+      <h2>Read the Full Specification</h2>
+      <a href="spec/v1.1.html">View O-Lang v1.1 Spec</a>
+    </div>
   </main>
 
   <footer class="footer">
