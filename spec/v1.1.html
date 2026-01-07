@@ -308,7 +308,6 @@
     </header>
 
     <main>
-      <!-- BEGIN: YOUR EXACT SPEC CONTENT (with section IDs added for ToC) -->
       <div class="section" id="sec-1">
         <h2>1. Purpose & Philosophy</h2>
         <h3>1.1 The Autonomy Crisis in AI Systems</h3>
@@ -344,7 +343,7 @@
         <p>O-Lang defines a portable protocol for:</p>
         <ul>
           <li><strong>Portable execution format</strong> — Workflows are language-agnostic, versionable, and human-readable</li>
-          <li><strong>Runtime-enforced policy boundary</strong> — Resolvers are explicitly allowed, never trusted</li>
+          <li><strong>Runtime-enforced policy boundary</strong> — <strong>Capabilities</strong> (runtime resolvers) are explicitly allowed, never trusted</li>
           <li><strong>Resolver invocation contract</strong> — Standardized I/O, sandboxing, and error handling across all capabilities</li>
           <li><strong>Semantic enforcement of workflow meaning</strong> — Symbols must exist in reality, not just in intent</li>
         </ul>
@@ -358,6 +357,17 @@
           <li><strong>Trust</strong> is established by the runtime kernel, which enforces policy, validates resolver behavior, and mediates all external interactions.</li>
         </ul>
         <p>A resolver may be <em>conformant</em> but not <em>trusted</em> — certification of entire packages (including runtime behavior) is a separate governance layer beyond static conformance.</p>
+
+        <h3>1.6 Key Definitions</h3>
+        <p>The following terms have specific meanings in the context of the O-Lang Protocol:</p>
+        <ul>
+          <li><strong>Kernel</strong>: A semantic runtime that parses workflows, enforces policy, validates capabilities, and emits auditable execution traces. It is <em>not</em> an executor of business logic.</li>
+          <li><strong>Workflow</strong>: A declarative, human-readable document that defines a sequence of steps, inputs, outputs, and failure modes. It is a <em>semantic contract</em>, not a script.</li>
+          <li><strong>Capability</strong>: An external, executable component (e.g., <code>@o-lang/notify-telegram</code>) that performs side effects (e.g., HTTP calls, LLM inference). Capabilities are <em>explicitly allowed but never trusted</em> by the kernel.</li>
+          <li><strong>Resolver</strong> (Conformance Context): A conformant workflow that adheres to the O-Lang Resolver Contract (Section 14). It is a <em>static declaration</em> with defined <code>inputs</code>, <code>outputs</code>, <code>steps</code>, and <code>failures</code>. This is what is validated by the official test harness.</li>
+          <li><strong>Symbol</strong>: A named value referenced in a workflow. Symbols include inputs, step outputs (<code>Save as</code>), emitted values, and persisted data. A symbol is either <em>defined</em> (exists in reality) or <em>undefined</em> (referenced but not produced) — never <code>null</code> or empty.</li>
+        </ul>
+        <p>These definitions supersede colloquial or implementation-specific usage.</p>
       </div>
 
       <div class="section" id="sec-2">
@@ -394,9 +404,32 @@
           <li>observable failure modes</li>
         </ul>
 
-        <h3>2.3 Resolver</h3>
-        <p>A Resolver is an external capability boundary.</p>
-        <p><strong>Resolvers may be:</strong></p>
+        <p><strong>Example:</strong></p>
+        <pre>Workflow "HR Summary" with policy_query, user_id
+
+Allow resolvers:
+- doc-search
+- llm-groq
+- notify-telegram
+
+Step 1: Ask doc-search "{policy_query}" Save as doc
+Step 2: Ask llm-groq "Summarize for staff:\n{doc.text}" Save as summary
+Step 3: Notify {user_id} using Telegram Save as notification
+
+Return summary</pre>
+
+        <p>This workflow demonstrates:</p>
+        <ul>
+          <li><strong>Deterministic order</strong>: Steps execute sequentially</li>
+          <li><strong>Immutable inputs</strong>: <code>policy_query</code> and <code>user_id</code> are read-only</li>
+          <li><strong>Symbol-tracked outputs</strong>: <code>doc</code>, <code>summary</code>, and <code>notification</code> are explicitly declared via <code>Save as</code></li>
+          <li><strong>Observable failure</strong>: If <code>llm-groq</code> fails, <code>summary</code> remains undefined — the kernel surfaces this as a semantic violation</li>
+          <li><strong>Stateless execution</strong>: No global state; all context flows through symbols</li>
+        </ul>
+
+        <h3>2.3 Capability</h3>
+        <p>A Capability is an external executable boundary.</p>
+        <p><strong>Capabilities may be:</strong></p>
         <ul>
           <li>HTTP services</li>
           <li>local binaries</li>
@@ -404,8 +437,8 @@
           <li>edge services</li>
           <li>IoT hardware interfaces</li>
         </ul>
-        <p><strong>Resolvers are never trusted.</strong><br>
-        All resolver results are validated by the kernel, not assumed correct.</p>
+        <p><strong>Capabilities are never trusted.</strong><br>
+        All capability results are validated by the kernel, not assumed correct.</p>
       </div>
 
       <div class="section" id="sec-3">
@@ -434,7 +467,7 @@ Return &lt;symbol&gt;</pre>
 [Step &lt;n&gt;:] &lt;function&gt;(&lt;args&gt;) Save as &lt;symbol&gt;</pre>
         <ul>
           <li><code>Step &lt;n&gt;:</code> is optional and for human readability only</li>
-          <li><code>&lt;function&gt;</code> may be a built-in (e.g., <code>add</code>, <code>concat</code>) or resolver name</li>
+          <li><code>&lt;function&gt;</code> may be a built-in (e.g., <code>add</code>, <code>concat</code>) or capability name</li>
           <li><code>&lt;symbol&gt;</code> must be a single alphanumeric identifier (normalized by kernel)</li>
         </ul>
         <h3>3.4 Parallel Execution Blocks</h3>
@@ -479,7 +512,7 @@ EndIf</pre>
         <h3>4.2 Symbol Lifecycle</h3>
         <pre>Declared / Referenced
 ↓
-Produced by Resolver  
+Produced by Capability  
 ↓
 Available in Context
 ↓
@@ -516,7 +549,7 @@ Observed or Missing</pre>
         <h3>4.5 Determinism Boundary (Normative)</h3>
         <div class="normative">
           <p>
-            Given identical workflow definitions, resolver declarations, and resolver outputs,
+            Given identical workflow definitions, capability declarations, and capability outputs,
             all compliant kernels <strong>MUST</strong> produce:
           </p>
           <ul>
@@ -554,9 +587,9 @@ Observed or Missing</pre>
       </div>
 
       <div class="section" id="sec-6">
-        <h2>6. Resolver Contract and Multi-Language Support</h2>
-        <h3>6.1 Resolver Invocation</h3>
-        <p>Resolvers are invoked via function-call syntax:</p>
+        <h2>6. Capability Contract and Multi-Language Support</h2>
+        <h3>6.1 Capability Invocation</h3>
+        <p>Capabilities are invoked via function-call syntax:</p>
         <pre>medical-api("{symptoms}") Save as diagnosis</pre>
         <ul>
           <li>Kernel resolves function name against <code>Allow resolvers</code> list</li>
@@ -569,7 +602,7 @@ Observed or Missing</pre>
           <li><strong>No side effects outside declared and kernel-permitted boundaries</strong></li>
         </ul>
         <h3>6.3 Multi-Language Implementation</h3>
-        <p>Resolvers may be implemented in <strong>any language</strong> that can:</p>
+        <p>Capabilities may be implemented in <strong>any language</strong> that can:</p>
         <ul>
           <li>Read JSON input from stdin or HTTP request</li>
           <li>Write JSON output to stdout or HTTP response</li>
@@ -583,7 +616,7 @@ Observed or Missing</pre>
           <li><strong>Go</strong>: gRPC or REST service</li>
           <li><strong>Shell</strong>: Script that reads <code>$1</code> as JSON and outputs result</li>
         </ul>
-        <h3>6.4 Kernel-Resolver Interface</h3>
+        <h3>6.4 Kernel-Capability Interface</h3>
         <p>Kernels MUST support <strong>at least one</strong> of:</p>
         <ul>
           <li><strong>HTTP</strong>: <code>POST /resolve</code> with JSON payload</li>
@@ -591,12 +624,12 @@ Observed or Missing</pre>
           <li><strong>In-process</strong>: language-native function call (for embedded use)</li>
         </ul>
         <p>The choice of interface is <strong>implementation-defined</strong> — the protocol only specifies <strong>what</strong> is called, not <strong>how</strong>.</p>
-        <h3>6.5 Resolver Declaration (Normative)</h3>
+        <h3>6.5 Capability Declaration (Normative)</h3>
         <p>
-          Every resolver MUST expose a static declaration document describing its capabilities.
+          Every capability MUST expose a static declaration document describing its behavior.
         </p>
         <pre>{
-  "id": "resolver.health.triage",
+  "id": "capability.health.triage",
   "intents": ["diagnose"],
   "input_schema": {
     "symptoms": "string[]"
@@ -611,7 +644,7 @@ Observed or Missing</pre>
         <div class="normative">
           <ul>
             <li>Declarations MUST be static and machine-readable</li>
-            <li>Kernels MUST validate resolver behavior against its declaration</li>
+            <li>Kernels MUST validate capability behavior against its declaration</li>
             <li>Undeclared behavior is a semantic violation</li>
           </ul>
         </div>
@@ -641,7 +674,7 @@ Observed or Missing</pre>
   "workflow": "string",
   "intent": "string",
   "step": "number | null",
-  "resolver": "string | null",
+  "capability": "string | null",
   "symbols_produced": ["symbol"],
   "symbols_missing": ["symbol"],
   "policy_decision": "allowed | blocked | skipped",
@@ -667,10 +700,10 @@ Observed or Missing</pre>
         <p><strong>O-Lang solution:</strong></p>
         <ul>
           <li>workflow intent ≠ execution authority</li>
-          <li>resolvers explicitly allowed</li>
+          <li>capabilities explicitly allowed</li>
           <li>kernel mediates every invocation</li>
         </ul>
-        <p><strong>Resolvers never gain power they weren't granted.</strong></p>
+        <p><strong>Capabilities never gain power they weren't granted.</strong></p>
       </div>
 
       <div class="section" id="sec-15">
@@ -684,9 +717,9 @@ Observed or Missing</pre>
         <h3>15.1 Standard Error Codes</h3>
         <ul>
           <li><code>INVALID_OLANG</code></li>
-          <li><code>UNDECLARED_RESOLVER</code></li>
+          <li><code>UNDECLARED_CAPABILITY</code></li>
           <li><code>POLICY_VIOLATION</code></li>
-          <li><code>RESOLVER_FAILURE</code></li>
+          <li><code>CAPABILITY_FAILURE</code></li>
           <li><code>SYMBOL_UNDEFINED</code></li>
           <li><code>TIMEOUT</code></li>
           <li><code>SEMANTIC_VIOLATION</code></li>
@@ -704,7 +737,7 @@ Observed or Missing</pre>
         <h2>9. IoT & Edge Architecture</h2>
         <pre>[ Sensor / Actuator ]
 ↓
-[ Edge Resolver ]
+[ Edge Capability ]
 ↓
 [ O-Lang Kernel ]
 ↓
@@ -722,8 +755,8 @@ Observed or Missing</pre>
 
       <div class="section" id="sec-10">
         <h2>10. LangChain Integration</h2>
-        <h3>10.1 LangChain as a Resolver</h3>
-        <p>LangChain is just another resolver.</p>
+        <h3>10.1 LangChain as a Capability</h3>
+        <p>LangChain is just another capability.</p>
         <div class="integration-example">
           <code>Step 2: Ask langchain-agent "{query}" Save as answer</code>
         </div>
@@ -760,7 +793,7 @@ Observed or Missing</pre>
         <p>Kernels in different languages MUST interoperate at the protocol level:</p>
         <ul>
           <li>identical workflows produce equivalent contexts</li>
-          <li>resolver contracts are language-agnostic</li>
+          <li>capability contracts are language-agnostic</li>
           <li>audit trails are structurally consistent</li>
         </ul>
         <p>This ensures portability across environments while preserving governance guarantees.</p>
@@ -798,7 +831,7 @@ Observed or Missing</pre>
         <h3>12.3 Non-Goals for v1.1</h3>
         <p>This specification intentionally does not define:</p>
         <ul>
-          <li>Action handler certification</li>
+          <li>Capability handler certification</li>
           <li>Package registry governance</li>
           <li>Economic trust or reputation models</li>
           <li>Runtime sandboxing implementation details</li>
@@ -839,14 +872,13 @@ Observed or Missing</pre>
           No test may assert behavior not explicitly defined herein.
         </p>
       </div>
-      <!-- END: YOUR SPEC CONTENT -->
     </main>
 
     <footer>
       <p>
         © 2026 O-Lang Protocol. Open specification licensed under Apache 2.0.
         <br>
-        <a href="https://github.com/O-Lang-Central/conformance" target="_blank">Conformance Test Suite</a>
+        <a href="https://github.com/O-Lang-Central/resolver-test" target="_blank">Resolver Conformance Test Suite</a>
       </p>
       <div class="success" style="margin-top: 1rem; padding: 0.75rem; font-size: 0.875rem;">
         <strong>Review Note:</strong> This specification is open for technical review focused on 
