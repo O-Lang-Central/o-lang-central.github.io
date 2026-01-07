@@ -324,7 +324,7 @@
         <p>The industry is transitioning from <strong>autonomous agents</strong> to <strong>governable coordinators</strong>. O-Lang enables this shift by:</p>
         <ul>
           <li><strong>Separating intent from execution</strong> — Workflow definitions declare <em>what</em> should happen, not <em>how</em> it should be implemented</li>
-          <li><strong>Enforcing policy at runtime</strong> — Every resolver invocation is mediated by the kernel against explicit allow-lists and constraints</li>
+          <li><strong>Enforcing policy at runtime</strong> — Every capability invocation is mediated by the kernel against explicit allow-lists and constraints</li>
           <li><strong>Making meaning observable</strong> — Symbol validity, partial success, and semantic violations are surfaced as first-class runtime events</li>
           <li><strong>Providing deterministic auditability</strong> — Identical inputs produce identical execution traces across all compliant implementations</li>
         </ul>
@@ -343,8 +343,8 @@
         <p>O-Lang defines a portable protocol for:</p>
         <ul>
           <li><strong>Portable execution format</strong> — Workflows are language-agnostic, versionable, and human-readable</li>
-          <li><strong>Runtime-enforced policy boundary</strong> — <strong>Capabilities</strong> (runtime resolvers) are explicitly allowed, never trusted</li>
-          <li><strong>Resolver invocation contract</strong> — Standardized I/O, sandboxing, and error handling across all capabilities</li>
+          <li><strong>Runtime-enforced policy boundary</strong> — <strong>Capabilities</strong> are explicitly allowed, never trusted</li>
+          <li><strong>Capability invocation contract</strong> — Standardized I/O, sandboxing, and error handling across all capabilities</li>
           <li><strong>Semantic enforcement of workflow meaning</strong> — Symbols must exist in reality, not just in intent</li>
         </ul>
         <p><strong>O-Lang does not execute business logic.</strong><br>
@@ -354,7 +354,7 @@
         <p>O-Lang distinguishes between <strong>conformance</strong> and <strong>trust</strong>:</p>
         <ul>
           <li><strong>Conformance</strong> validates that a resolver declaration adheres to the O-Lang Resolver Contract (inputs, outputs, steps, failures).</li>
-          <li><strong>Trust</strong> is established by the runtime kernel, which enforces policy, validates resolver behavior, and mediates all external interactions.</li>
+          <li><strong>Trust</strong> is established by the runtime kernel, which enforces policy, validates capability behavior, and mediates all external interactions.</li>
         </ul>
         <p>A resolver may be <em>conformant</em> but not <em>trusted</em> — certification of entire packages (including runtime behavior) is a separate governance layer beyond static conformance.</p>
 
@@ -377,7 +377,7 @@
         <p>It is responsible for:</p>
         <ul>
           <li>parsing workflows</li>
-          <li>validating resolver eligibility</li>
+          <li>validating capability eligibility</li>
           <li>enforcing execution policy</li>
           <li>tracking symbol lifecycles</li>
           <li>detecting semantic violations</li>
@@ -389,7 +389,7 @@
             <li>embed domain logic</li>
             <li>infer missing values</li>
             <li>silently ignore failures</li>
-            <li>bypass resolver restrictions</li>
+            <li>bypass capability restrictions</li>
           </ul>
         </div>
 
@@ -407,7 +407,7 @@
         <p><strong>Example:</strong></p>
         <pre>Workflow "HR Summary" with policy_query, user_id
 
-Allow resolvers:
+Allow capabilities:
 - doc-search
 - llm-groq
 - notify-telegram
@@ -426,6 +426,7 @@ Return summary</pre>
           <li><strong>Observable failure</strong>: If <code>llm-groq</code> fails, <code>summary</code> remains undefined — the kernel surfaces this as a semantic violation</li>
           <li><strong>Stateless execution</strong>: No global state; all context flows through symbols</li>
         </ul>
+        <p><strong>Note on typing</strong>: Input types are inferred from usage context or declared in the compiled resolver contract. The workflow syntax prioritizes readability; type safety is enforced at conformance time.</p>
 
         <h3>2.3 Capability</h3>
         <p>A Capability is an external executable boundary.</p>
@@ -456,18 +457,20 @@ Return summary</pre>
         <h3>3.2 Top-Level Structure</h3>
         <pre>Workflow "&lt;name&gt;" [with &lt;param&gt;+]
 
-[Allow resolvers:
-- &lt;resolver-name&gt;]+
+[Allow capabilities:
+- &lt;capability-name&gt;]+
 
 &lt;step-or-block&gt;+
 
 Return &lt;symbol&gt;</pre>
+        <p>Input parameters listed after <code>with</code> are immutable and passed into the workflow context. Their types are determined at conformance time via the resolver contract.</p>
         <h3>3.3 Step Declaration</h3>
         <pre>[Step &lt;n&gt;:] Ask "&lt;query&gt;" Save as &lt;symbol&gt;
 [Step &lt;n&gt;:] &lt;function&gt;(&lt;args&gt;) Save as &lt;symbol&gt;</pre>
         <ul>
           <li><code>Step &lt;n&gt;:</code> is optional and for human readability only</li>
           <li><code>&lt;function&gt;</code> may be a built-in (e.g., <code>add</code>, <code>concat</code>) or capability name</li>
+          <li><code>Ask</code> is syntactic sugar for natural-language prompting; it compiles to the same capability invocation as <code>&lt;function&gt;(&lt;args&gt;)</code></li>
           <li><code>&lt;symbol&gt;</code> must be a single alphanumeric identifier (normalized by kernel)</li>
         </ul>
         <h3>3.4 Parallel Execution Blocks</h3>
@@ -592,7 +595,7 @@ Observed or Missing</pre>
         <p>Capabilities are invoked via function-call syntax:</p>
         <pre>medical-api("{symptoms}") Save as diagnosis</pre>
         <ul>
-          <li>Kernel resolves function name against <code>Allow resolvers</code> list</li>
+          <li>Kernel resolves function name against <code>Allow capabilities</code> list</li>
           <li>If not allowed, kernel skips step and logs policy violation</li>
         </ul>
         <h3>6.2 Input/Output Contract</h3>
@@ -623,6 +626,7 @@ Observed or Missing</pre>
           <li><strong>Subprocess</strong>: spawn binary with JSON arg</li>
           <li><strong>In-process</strong>: language-native function call (for embedded use)</li>
         </ul>
+        <p><strong>Security note</strong>: Kernels operating in secure mode MUST restrict capability interfaces to sandboxed channels (e.g., HTTP-only). In-process execution is permitted only in development or trusted environments.</p>
         <p>The choice of interface is <strong>implementation-defined</strong> — the protocol only specifies <strong>what</strong> is called, not <strong>how</strong>.</p>
         <h3>6.5 Capability Declaration (Normative)</h3>
         <p>
