@@ -407,7 +407,7 @@
         <p><strong>Example:</strong></p>
         <pre>Workflow "HR Summary" with policy_query, user_id
 
-Allow capabilities:
+Allow resolvers:
 - doc-search
 - llm-groq
 - notify-telegram
@@ -457,13 +457,14 @@ Return summary</pre>
         <h3>3.2 Top-Level Structure</h3>
         <pre>Workflow "&lt;name&gt;" [with &lt;param&gt;+]
 
-[Allow capabilities:
+[Allow resolvers:
 - &lt;capability-name&gt;]+
 
 &lt;step-or-block&gt;+
 
 Return &lt;symbol&gt;</pre>
         <p>Input parameters listed after <code>with</code> are immutable and passed into the workflow context. Their types are determined at conformance time via the resolver contract.</p>
+        <p><strong>Note on terminology</strong>: The term “resolver” in workflow syntax (<code>Allow resolvers:</code>) refers to <strong>capabilities</strong> as defined in Section 1.6. This naming preserves developer ergonomics while the underlying model enforces capability-based governance.</p>
         <h3>3.3 Step Declaration</h3>
         <pre>[Step &lt;n&gt;:] Ask "&lt;query&gt;" Save as &lt;symbol&gt;
 [Step &lt;n&gt;:] &lt;function&gt;(&lt;args&gt;) Save as &lt;symbol&gt;</pre>
