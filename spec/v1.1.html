@@ -449,65 +449,126 @@
           All capability results are validated by the kernel, not assumed correct.</p>
         </div>
 
-        <div class="section" id="sec-3">
-          <h2>3. Syntax Grammar and Keywords (Normative)</h2>
-          <h3>3.1 General Syntax Rules</h3>
-          <p>O-Lang uses a line-oriented, English-like syntax. Whitespace is not significant except within quoted strings. All keywords are case-insensitive but conventionally capitalized.</p>
-          <div class="normative">
-            <strong>Normative Language:</strong>
-            <p>
-              The keywords <strong>MUST</strong>, <strong>MUST NOT</strong>,
-              <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong>
-              are to be interpreted as described in <strong>RFC 2119</strong>.
-            </p>
-          </div>
-          <h3>3.2 Top-Level Structure</h3>
-          <pre>Workflow "&lt;name&gt;" [with &lt;param&gt;+]
+      <div class="section" id="sec-3">
+<h2>3. Syntax Grammar and Keywords (Normative)</h2>
+<p>O-Lang workflows MUST conform to the Linear Declarative Workflow Form (LDWF): a line-oriented, human-readable, machine-strict format.</p>
 
-  [Allow resolvers:
-  - &lt;capability-name&gt;]+
+<h3>3.1 General Syntax Rules</h3>
+<ul>
+  <li>Whitespace is insignificant except within quoted strings</li>
+  <li>All keywords are case-insensitive but conventionally capitalized</li>
+  <li>Blank lines MUST separate logical sections and steps</li>
+  <li>Indentation is semantic-neutral and MUST NOT affect parsing</li>
+  <li>One intent per line (e.g., <code>Save as x</code>, not <code>Save as x and notify</code>)</li>
+</ul>
+<div class="normative">
+  <strong>Normative Language:</strong>
+  <p>The keywords <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> are interpreted per <strong>RFC 2119</strong>.</p>
+</div>
 
-  &lt;step-or-block&gt;+
+<h3>3.2 Workflow Declaration</h3>
+<pre>Workflow "&lt;name&gt;" [with &lt;input&gt;[, &lt;input&gt;]*]</pre>
+<ul>
+  <li><code>&lt;name&gt;</code>: quoted string</li>
+  <li><code>&lt;input&gt;</code>: workflow input symbol (alphanumeric)</li>
+  <li>Inputs are immutable and available in initial context</li>
+</ul>
 
-  Return &lt;symbol&gt;</pre>
-          <p>Input parameters listed after <code>with</code> are immutable and passed into the workflow context. Their types are determined at conformance time via the resolver contract.</p>
-          <p><strong>Note on terminology</strong>: The term “resolver” in workflow syntax (<code>Allow resolvers:</code>) refers to <strong>capabilities</strong> as defined in Section 1.6. This naming preserves developer ergonomics while the underlying model enforces capability-based governance.</p>
-          <h3>3.3 Step Declaration</h3>
-          <pre>[Step &lt;n&gt;:] Ask "&lt;query&gt;" Save as &lt;symbol&gt;
-  [Step &lt;n&gt;:] &lt;function&gt;(&lt;args&gt;) Save as &lt;symbol&gt;</pre>
-          <ul>
-            <li><code>Step &lt;n&gt;:</code> is optional and for human readability only</li>
-            <li><code>&lt;function&gt;</code> may be a built-in (e.g., <code>add</code>, <code>concat</code>) or capability name</li>
-            <li><code>Ask</code> is syntactic sugar for natural-language prompting; it compiles to the same capability invocation as <code>&lt;function&gt;(&lt;args&gt;)</code></li>
-            <li><code>&lt;symbol&gt;</code> must be a single alphanumeric identifier (normalized by kernel)</li>
-          </ul>
-          <h3>3.4 Parallel Execution Blocks</h3>
-          <pre>Run in parallel [for &lt;duration&gt;]
-    &lt;step&gt;+
-  End</pre>
-          <ul>
-            <li><code>&lt;duration&gt;</code>: integer followed by time unit (<code>ms</code>, <code>s</code>, <code>m</code>, <code>h</code>)</li>
-            <li>If <code>for</code> clause is omitted, block runs until all steps complete</li>
-            <li>All steps inside execute concurrently</li>
-            <li>Context is snapshotted before block entry</li>
-          </ul>
-          <h3>3.5 Conditional Logic</h3>
-          <pre>If &lt;condition&gt;:
-    &lt;step-or-block&gt;+
-  [Else:
-    &lt;step-or-block&gt;+]
-  EndIf</pre>
-          <ul>
-            <li><code>&lt;condition&gt;</code>: system-provided boolean symbols only (<code>timed_out</code>, <code>escalation_completed</code>)</li>
-            <li>User-defined symbols <strong>cannot</strong> be used in conditions (to preserve deterministic observability)</li>
-          </ul>
-          <h3>3.6 Persistence</h3>
-          <pre>Persist &lt;symbol&gt; to "&lt;filepath&gt;"</pre>
-          <ul>
-            <li>Fails if <code>&lt;symbol&gt;</code> is undefined (semantic enforcement)</li>
-            <li><code>&lt;filepath&gt;</code> is relative to execution environment’s output directory</li>
-          </ul>
-        </div>
+<h3>33. Allowed Resolvers Block</h3>
+<pre>Allow resolvers:
+- &lt;capability-name&gt;
+[ - &lt;capability-name&gt; ]*</pre>
+<ul>
+  <li>MUST appear once, after <code>Workflow</code></li>
+  <li>Only listed capabilities may be invoked</li>
+  <li>Capability names are normalized identifiers</li>
+</ul>
+
+<h3>3.4 Step Declaration</h3>
+<p>Steps are declared sequentially. Step numbers are optional but, if used, MUST be monotonically increasing positive integers.</p>
+<pre>[Step &lt;n&gt;:] &lt;action&gt; [Save as &lt;symbol&gt;]</pre>
+<ul>
+  <li>Blank lines MUST separate steps</li>
+  <li><code>&lt;symbol&gt;</code> is normalized to alphanumeric + underscore</li>
+</ul>
+
+<h4>Action Types</h4>
+<p>Kernels MUST support the following action forms:</p>
+<table style="width:100%; border-collapse: collapse; margin: 1rem 0;">
+  <tr><th style="border:1px solid var(--border); padding:8px; text-align:left;">Form</th><th style="border:1px solid var(--border); padding:8px; text-align:left;">Description</th></tr>
+  <tr><td><code>Ask &lt;target&gt; "&lt;prompt&gt;"</code></td><td>Natural-language capability invocation</td></tr>
+  <tr><td><code>Use &lt;resolver&gt; [with &lt;json-object&gt;]</code></td><td>Structured capability call</td></tr>
+  <tr><td><code>Debrief &lt;agent&gt; with "&lt;message&gt;"</code></td><td>Human-in-the-loop escalation</td></tr>
+  <tr><td><code>Evolve &lt;resolver&gt; using feedback: "&lt;text&gt;"</code></td><td>Capability self-improvement directive</td></tr>
+  <tr><td><code>Prompt user to "&lt;question&gt;"</code></td><td>Interactive user input request</td></tr>
+  <tr><td><code>Persist &lt;symbol&gt; to "&lt;path&gt;"</code></td><td>Declarative persistence</td></tr>
+  <tr><td><code>Emit "&lt;event&gt;" with &lt;payload&gt;</code></td><td>Event emission</td></tr>
+</table>
+
+<h3>3.5 Control Flow</h3>
+<h4>Conditional Blocks</h4>
+<pre>If &lt;condition&gt;:
+&lt;step-or-action&gt;+
+[Else:
+&lt;step-or-action&gt;+]
+EndIf</pre>
+<ul>
+  <li><code>&lt;condition&gt;</code>: comparison involving system-provided symbols only (e.g., <code>{score} &gt; 80</code>)</li>
+  <li>User-defined symbols MAY be used in conditions (updated from v1.0)</li>
+  <li>Blocks MUST be explicitly closed with <code>EndIf</code></li>
+</ul>
+
+<h4>Parallel Execution</h4>
+<pre>Run in parallel [for &lt;duration&gt;]:
+&lt;step-or-action&gt;+
+End</pre>
+<ul>
+  <li><code>&lt;duration&gt;</code>: number + unit (<code>s</code>, <code>m</code>, <code>h</code>, <code>d</code>)</li>
+  <li>Context is snapshotted before block entry</li>
+</ul>
+
+<h4>Escalation Chains</h4>
+<pre>Run in parallel with escalation:
+Level 1: [Immediately | Within &lt;duration&gt;]
+&lt;step-or-action&gt;+
+Level 2: Within &lt;duration&gt;
+&lt;step-or-action&gt;+
+End</pre>
+<ul>
+  <li>Reserved for multi-level timeout escalation</li>
+  <li>Kernels MUST parse but MAY treat as standard parallel blocks in v1.1</li>
+</ul>
+
+<h3>3.6 Constraints</h3>
+<p>Global or per-step constraints define execution parameters:</p>
+<pre>Constraint: max_generations = &lt;number&gt;
+
+# Within a step:
+Step 1: Ask LLM "..."
+Constraint: temperature=0.7
+Constraint: tools=["search", "calc"]</pre>
+<ul>
+  <li>Constraints are key-value pairs</li>
+  <li>Values may be strings, numbers, or JSON arrays</li>
+</ul>
+
+<h3>3.7 Return Statement</h3>
+<pre>Return &lt;symbol&gt;[, &lt;symbol&gt;]*</pre>
+<ul>
+  <li>Declares workflow outputs</li>
+  <li>Referenced symbols MUST be produced by steps</li>
+</ul>
+
+<h3>3.8 Formatting & Linting (Normative)</h3>
+<div class="normative">
+<ul>
+  <li>Step numbers, if present, MUST be monotonically increasing</li>
+  <li>Blank lines MUST separate steps and logical sections</li>
+  <li>Workflows violating structural rules MUST be rejected by kernels</li>
+  <li>Style violations (e.g., inconsistent resolver naming) SHOULD warn but not fail</li>
+</ul>
+</div>
+</div>
 
         <div class="section" id="sec-4">
           <h2>4. Semantic Execution Model (Normative)</h2>
