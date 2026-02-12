@@ -570,6 +570,39 @@ Output content (e.g. LLM-generated text) may differ, but
 <strong>semantic structure MUST NOT</strong>.
 </p>
 </div>
+
+<!-- 🔴 NEW SECTION 4.6 INSERTED HERE -->
+<h3>4.6 Kernel Execution Invariant: Canonical Action Form (Normative)</h3>
+<p>
+The kernel MUST canonicalize surface syntax (<code>Ask</code>, <code>Use</code>) into execution form 
+(<code>Action</code>) BEFORE dispatching to resolvers.
+</p>
+<div class="normative">
+<strong>The kernel MUST:</strong>
+<ul>
+<li>Transform <code>Ask &lt;resolver&gt; ...</code> → <code>Action &lt;resolver&gt; ...</code></li>
+<li>Transform <code>Use &lt;resolver&gt; ...</code> → <code>Action &lt;resolver&gt; ...</code></li>
+<li>Preserve resolver boundary integrity (exactly one space after <code>Action</code>)</li>
+<li>Reject non-canonical actions with explicit error BEFORE resolver dispatch</li>
+</ul>
+<strong>The kernel MUST NOT:</strong>
+<ul>
+<li>Pass surface syntax (<code>Ask ...</code>) directly to resolvers</li>
+<li>Allow resolver name bleed (e.g., <code>"resolver-a resolver-b"</code>)</li>
+<li>Silently recover from malformed actions</li>
+</ul>
+</div>
+<p>
+<strong>Rationale:</strong> Resolvers are implementation details that should not parse workflow syntax. 
+Canonical form enables deterministic execution traces, prevents resolver coupling to evolving DSL syntax, 
+and enables safe external resolver protocols (HTTP endpoints expect <code>Action</code> prefix).
+</p>
+<p>
+<strong>Violation:</strong> Kernel MUST throw <code>[O-Lang INTERNAL]</code> error before resolver dispatch 
+if invariant broken. This indicates a kernel bug, not workflow authoring error.
+</p>
+<!-- END NEW SECTION 4.6 -->
+
 </div>
 <div class="section" id="sec-5">
 <h2>5. Parallel and Timed Execution Semantics (Normative)</h2>
@@ -655,6 +688,38 @@ Every capability MUST expose a static declaration document describing its behavi
 <li>Undeclared behavior is a semantic violation</li>
 </ul>
 </div>
+
+<!-- 🔴 NEW SECTION 6.6 INSERTED HERE -->
+<h3>6.6 Resolver Safety Contract (Normative)</h3>
+<p>
+Resolvers MUST honor explicit failure semantics — never fabricating data or silently falling back 
+to hardcoded values when inputs are invalid.
+</p>
+<div class="normative">
+<strong>Resolvers MUST:</strong>
+<ul>
+<li>Fail explicitly with structured errors when inputs are missing/invalid</li>
+<li>Include actionable diagnostics (paths, expected schema, working directory)</li>
+<li>Preserve determinism: same inputs → same outputs (including errors)</li>
+</ul>
+<strong>Resolvers MUST NOT:</strong>
+<ul>
+<li>Return fabricated/hardcoded data when databases/files are missing</li>
+<li>Silently fall back to demo/test data without explicit opt-in</li>
+<li>Mask infrastructure errors (missing files, schema mismatches) as business logic errors</li>
+</ul>
+</div>
+<p>
+<strong>Rationale:</strong> Silent fallbacks turn configuration errors into data corruption errors. 
+They violate determinism, destroy auditability, and create unacceptable risk in safety-critical domains 
+(finance, healthcare, government).
+</p>
+<p>
+<strong>Example violation:</strong> Resolver returns <code>balance: 5000</code> for customer <code>12345</code> 
+when database file is missing — instead of explicit <code>DATABASE_ERROR</code>.
+</p>
+<!-- END NEW SECTION 6.6 -->
+
 </div>
 <div class="section" id="sec-7">
 <h2>7. Runtime Observability</h2>
@@ -879,7 +944,7 @@ No test may assert behavior not explicitly defined herein.
 <a href="https://github.com/O-Lang-Central/resolver-test" target="_blank">Resolver Conformance Test Suite</a>
 </p>
 <div class="success" style="margin-top: 1rem; padding: 0.75rem; font-size: 0.875rem;">
-<strong>Review Note:</strong> This specification is open for technical review until February 14, 2026.<br>
+<strong>Review Note:</strong> This specification is open for technical review until March 1, 2026.<br>
 Feedback on clarity, consistency, and testability is welcome in the 
 <a href="https://github.com/O-lang-Central/olang-spec/discussions/1" target="_blank">public RFC discussion</a>.<br>
 <strong>No new semantics will be accepted</strong> — v1.2 will consider structural changes via formal RFC.
