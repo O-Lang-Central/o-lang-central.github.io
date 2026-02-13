@@ -692,6 +692,13 @@ Every capability MUST expose a static declaration document describing its behavi
 <!-- 🔴 NEW SECTION 6.6 INSERTED HERE -->
 <h3>6.6 Resolver Safety Contract (Normative)</h3>
 <p>
+<strong>Context:</strong> A <em>resolver</em> is any external component (database, API, sensor, LLM, 
+or custom service) that produces values for workflow symbols. In conventional systems, resolvers 
+are called <em>tools</em> (LangChain), <em>nodes</em> (n8n), or <em>functions</em> (OpenAI). 
+In O-lang, resolvers execute <em>outside</em> the kernel and <em>must</em> honor explicit failure 
+semantics — never fabricating data or silently falling back to hardcoded values when inputs are invalid.
+</p>
+<p>
 Resolvers MUST honor explicit failure semantics — never fabricating data or silently falling back 
 to hardcoded values when inputs are invalid.
 </p>
