@@ -730,8 +730,10 @@ directive commands retry → trace shows <code>attempt_1: UNDEFINED</code>,
 <code>attempt_2: UNDEFINED</code>, <code>attempt_3: DEFINED (2500)</code>. 
 All retry decisions are auditable and bounded.
 </p>
-<!-- END NEW SECTION 6.6 -->
-
+<p>
+See <a href="#appendix-a">Appendix A</a> for detailed execution trace comparison and cross-domain applicability.
+</p>
+<!-- END UPDATED SECTION 6.6 -->
 </div>
 <div class="section" id="sec-7">
 <h2>7. Runtime Observability</h2>
@@ -948,6 +950,132 @@ No test may assert behavior not explicitly defined herein.
 </p>
 </div>
 </main>
+<!-- 🔴 APPENDIX A INSERTED HERE (after Section 15, before footer) -->
+<div class="section" id="appendix-a">
+<h2>Appendix A: Failure Handling Patterns — Explicit vs Implicit Retries (Informative)</h2>
+<p>
+<strong>Domain applicability note:</strong> The examples below use a financial balance-check scenario for concrete illustration, 
+but the safety principles apply universally across domains including healthcare diagnostics, IoT sensor fusion, 
+government service delivery, agritech monitoring, and any system where transient infrastructure failures must not 
+result in silent data fabrication.
+</p>
+
+<h3>A.1 Execution Trace Comparison: Explicit Workflow Retries Preserve Auditability</h3>
+<table style="width:100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem;">
+<thead>
+<tr style="background-color: var(--code-bg);">
+<th style="border:1px solid var(--border); padding:10px; text-align:left; width:10%;">Step</th>
+<th style="border:1px solid var(--border); padding:10px; text-align:left; width:25%;">Kernel Action</th>
+<th style="border:1px solid var(--border); padding:10px; text-align:left; width:30%;">Symbol State (<code>balance</code>)</th>
+<th style="border:1px solid var(--border); padding:10px; text-align:left; width:35%;">Observable Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="border:1px solid var(--border); padding:8px;">1</td>
+<td style="border:1px solid var(--border); padding:8px;">Invoke resolver <code>QueryDB("12345")</code></td>
+<td style="border:1px solid var(--border); padding:8px;"><code>PENDING</code></td>
+<td style="border:1px solid var(--border); padding:8px;">System shows "Checking balance..."</td>
+</tr>
+<tr style="background-color: #fef2f2;">
+<td style="border:1px solid var(--border); padding:8px;">2</td>
+<td style="border:1px solid var(--border); padding:8px;">Resolver returns <code>DATABASE_TIMEOUT</code></td>
+<td style="border:1px solid var(--border); padding:8px;"><code>UNDEFINED (reason: timeout)</code></td>
+<td style="border:1px solid var(--border); padding:8px;"><strong>Kernel halts</strong> — no hidden retry</td>
+</tr>
+<tr>
+<td style="border:1px solid var(--border); padding:8px;">3</td>
+<td style="border:1px solid var(--border); padding:8px;">Workflow evaluates <code>Catch → Continue</code></td>
+<td style="border:1px solid var(--border); padding:8px;">Still <code>UNDEFINED</code></td>
+<td style="border:1px solid var(--border); padding:8px;">Explicit retry decision logged in trace</td>
+</tr>
+<tr style="background-color: #fef2f2;">
+<td style="border:1px solid var(--border); padding:8px;">4</td>
+<td style="border:1px solid var(--border); padding:8px;">Enforce <code>backoff=2s</code> wait</td>
+<td style="border:1px solid var(--border); padding:8px;"><code>UNDEFINED (waiting)</code></td>
+<td style="border:1px solid var(--border); padding:8px;">User sees "Retrying in 2s..." (if UI exposes trace)</td>
+</tr>
+<tr>
+<td style="border:1px solid var(--border); padding:8px;">5</td>
+<td style="border:1px solid var(--border); padding:8px;">2nd resolver invocation</td>
+<td style="border:1px solid var(--border); padding:8px;"><code>PENDING (attempt 2)</code></td>
+<td style="border:1px solid var(--border); padding:8px;">"Attempt 2/3..."</td>
+</tr>
+<tr style="background-color: #fef2f2;">
+<td style="border:1px solid var(--border); padding:8px;">6</td>
+<td style="border:1px solid var(--border); padding:8px;">Resolver returns <code>DATABASE_TIMEOUT</code></td>
+<td style="border:1px solid var(--border); padding:8px;"><code>UNDEFINED (reason: timeout #2)</code></td>
+<td style="border:1px solid var(--border); padding:8px;"><strong>Kernel halts again</strong> — failure remains visible</td>
+</tr>
+<tr>
+<td style="border:1px solid var(--border); padding:8px;">7–9</td>
+<td style="border:1px solid var(--border); padding:8px;">Loop counter → backoff → 3rd attempt</td>
+<td style="border:1px solid var(--border); padding:8px;"><code>PENDING (attempt 3)</code></td>
+<td style="border:1px solid var(--border); padding:8px;">"Attempt 3/3..."</td>
+</tr>
+<tr style="background-color: #dcfce7;">
+<td style="border:1px solid var(--border); padding:8px;">10</td>
+<td style="border:1px solid var(--border); padding:8px;">Resolver returns <code>2500</code> (success)</td>
+<td style="border:1px solid var(--border); padding:8px;"><code>DEFINED → 2500</code></td>
+<td style="border:1px solid var(--border); padding:8px;">Balance displayed: "₦2,500"</td>
+</tr>
+</tbody>
+</table>
+<p style="font-style: italic; color: var(--gray); margin-top: 0.5rem;">
+Trace always shows: <code>attempt_1: UNDEFINED</code> → <code>attempt_2: UNDEFINED</code> → <code>attempt_3: DEFINED (2500)</code>. 
+No path exists for silent corruption.
+</p>
+
+<h3>A.2 Critical Distinctions: Where Retry Authority Resides</h3>
+<table style="width:100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem;">
+<thead>
+<tr style="background-color: var(--code-bg);">
+<th style="border:1px solid var(--border); padding:10px; text-align:left; width:30%;">Dimension</th>
+<th style="border:1px solid var(--border); padding:10px; text-align:left; width:35%;">Conventional Orchestration (LangChain, n8n)</th>
+<th style="border:1px solid var(--border); padding:10px; text-align:left; width:35%;">O-Lang Governance Protocol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="border:1px solid var(--border); padding:8px; font-weight:600;">Retry authority</td>
+<td style="border:1px solid var(--border); padding:8px;">Orchestrator (hidden middleware)</td>
+<td style="border:1px solid var(--border); padding:8px;">Workflow author (explicit <code>Loop</code>/<code>Try</code> directives)</td>
+</tr>
+<tr style="background-color: #fef2f2;">
+<td style="border:1px solid var(--border); padding:8px; font-weight:600;">Failure visibility</td>
+<td style="border:1px solid var(--border); padding:8px;">Masked by retries/fallbacks → "success" log hides root cause</td>
+<td style="border:1px solid var(--border); padding:8px;">Propagated immediately → trace shows every failure attempt</td>
+</tr>
+<tr>
+<td style="border:1px solid var(--border); padding:8px; font-weight:600;">Auditability</td>
+<td style="border:1px solid var(--border); padding:8px;">Only final result logged; retry history lost</td>
+<td style="border:1px solid var(--border); padding:8px;">Full trace: <code>attempt_1 → attempt_2 → attempt_3</code></td>
+</tr>
+<tr style="background-color: #fef2f2;">
+<td style="border:1px solid var(--border); padding:8px; font-weight:600;">Determinism</td>
+<td style="border:1px solid var(--border); padding:8px;">Broken (retry success depends on network timing)</td>
+<td style="border:1px solid var(--border); padding:8px;">Preserved (fixed retry count/backoff → identical trace every run)</td>
+</tr>
+<tr>
+<td style="border:1px solid var(--border); padding:8px; font-weight:600;">Safety property</td>
+<td style="border:1px solid var(--border); padding:8px;">"System stays available" (even if wrong)</td>
+<td style="border:1px solid var(--border); padding:8px;">"System stays truthful" (even if temporarily unavailable)</td>
+</tr>
+<tr style="background-color: #fef2f2;">
+<td style="border:1px solid var(--border); padding:8px; font-weight:600;">Mental model</td>
+<td style="border:1px solid var(--border); padding:8px;">Car engine (optimize for motion)</td>
+<td style="border:1px solid var(--border); padding:8px;">Traffic law (optimize for safety boundaries)</td>
+</tr>
+</tbody>
+</table>
+<p>
+<strong>Why this matters in connectivity-constrained environments:</strong> In settings where network flakiness is the norm 
+(not the exception) — Nigerian USSD banking, rural IoT deployments, edge healthcare diagnostics — conventional systems 
+that "gracefully degrade" by fabricating values aren't graceful. They're <strong>structurally unsafe</strong>. 
+O-Lang's explicit-retry model ensures temporary unavailability is preferable to permanent corruption.
+</p>
+</div>
+<!-- END APPENDIX A -->
 <footer>
 <p>
 © 2026 O-Lang Protocol. Open specification licensed under Apache 2.0.
