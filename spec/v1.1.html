@@ -954,10 +954,16 @@ No test may assert behavior not explicitly defined herein.
 <div class="section" id="appendix-a">
 <h2>Appendix A: Failure Handling Patterns — Explicit vs Implicit Retries (Informative)</h2>
 <p>
-<strong>Domain applicability note:</strong> The examples below use a financial balance-check scenario for concrete illustration, 
-but the safety principles apply universally across domains including healthcare diagnostics, IoT sensor fusion, 
-government service delivery, agritech monitoring, and any system where transient infrastructure failures must not 
-result in silent data fabrication.
+<strong>Terminology bridge:</strong> In O-lang, a <em>resolver</em> is any external component that produces symbol values 
+— equivalent to <em>tools</em> in LangChain, <em>nodes</em> in n8n, <em>functions</em> in OpenAI Assistants, or 
+<em>sensors/actuators</em> in IoT systems. The critical distinction is not naming, but <strong>where failure 
+handling occurs</strong>: conventional systems embed retry…enforces failure visibility <em>outside</em> tools at the kernel boundary (governance-level).
+</p>
+<p>
+<strong>Domain applicability note:</strong> The examples below use a financial balance-check scenario for concrete 
+illustration, but the safety principles apply universally across domains including healthcare diagnostics, 
+IoT sensor fusion, government service delivery, agritech monitoring, and any system where transient infrastructure 
+failures must not result in silent data fabrication.
 </p>
 
 <h3>A.1 Execution Trace Comparison: Explicit Workflow Retries Preserve Auditability</h3>
