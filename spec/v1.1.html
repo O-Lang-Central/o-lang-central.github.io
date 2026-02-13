@@ -707,6 +707,8 @@ to hardcoded values when inputs are invalid.
 <li>Return fabricated/hardcoded data when databases/files are missing</li>
 <li>Silently fall back to demo/test data without explicit opt-in</li>
 <li>Mask infrastructure errors (missing files, schema mismatches) as business logic errors</li>
+<li>Implement implicit/internal retry logic that conceals transient failures (timeouts, partial responses) before returning results or errors</li>
+<li>Return fallback values after exhausting internal retries — retry policy belongs exclusively to the explicit workflow layer</li>
 </ul>
 </div>
 <p>
@@ -715,8 +717,18 @@ They violate determinism, destroy auditability, and create unacceptable risk in 
 (finance, healthcare, government).
 </p>
 <p>
-<strong>Example violation:</strong> Resolver returns <code>balance: 5000</code> for customer <code>12345</code> 
-when database file is missing — instead of explicit <code>DATABASE_ERROR</code>.
+<strong>Example violation (implicit retry + fallback):</strong> 
+Resolver receives valid <code>customer_id: 12345</code> → DB times out → resolver internally retries 3× → 
+still fails → returns hardcoded <code>balance: 5000</code> with no error. 
+Execution trace shows <code>balance: DEFINED</code> — failure is structurally invisible.
+</p>
+<p>
+<strong>Compliant pattern (explicit workflow retry):</strong>
+Resolver fails immediately on first timeout → returns <code>DATABASE_TIMEOUT</code> → 
+kernel halts with <code>balance: UNDEFINED</code> → workflow's explicit <code>Loop count=3</code> 
+directive commands retry → trace shows <code>attempt_1: UNDEFINED</code>, 
+<code>attempt_2: UNDEFINED</code>, <code>attempt_3: DEFINED (2500)</code>. 
+All retry decisions are auditable and bounded.
 </p>
 <!-- END NEW SECTION 6.6 -->
 
