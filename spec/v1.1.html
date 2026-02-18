@@ -289,13 +289,14 @@ License: Apache 2.0
 </ul>
 <p>This creates <strong>unacceptable risk</strong> in regulated environments (healthcare, finance, government) where AI decisions impact human lives, compliance, and legal liability.</p>
 <h3>1.2 From Agents to Governance</h3>
-<p>The industry is transitioning from <strong>autonomous agents</strong> to <strong>governable coordinators</strong>. O-Lang enables this shift by:</p>
+<p>The industry is transitioning from <strong>autonomous agents</strong> to <strong>governable systems</strong>. O-Lang enables this shift by establishing a <strong>runtime governance boundary</strong> that separates AI intent from execution authority:</p>
 <ul>
-<li><strong>Separating intent from execution</strong> — Workflow definitions declare <em>what</em> should happen, not <em>how</em> it should be implemented</li>
-<li><strong>Enforcing policy at runtime</strong> — Every capability invocation is mediated by the kernel against explicit allow-lists and constraints</li>
-<li><strong>Making meaning observable</strong> — Symbol validity, partial success, and semantic violations are surfaced as first-class runtime events</li>
-<li><strong>Providing deterministic auditability</strong> — Identical inputs produce identical execution traces across all compliant implementations</li>
+  <li><strong>Intent ≠ Execution</strong> — Workflows declare <em>what</em> should happen; the kernel governs <em>whether and how</em> it may execute</li>
+  <li><strong>Policy Mediation</strong> — Every capability invocation is mediated by the kernel against explicit allow-lists, constraints, and resolver contracts — never trusted</li>
+  <li><strong>Observable Meaning</strong> — Symbol validity, undefined references, and semantic violations are surfaced as structured, auditable events — never hidden or fabricated</li>
+  <li><strong>Deterministic Auditability</strong> — Identical inputs produce identical execution traces across all compliant kernels, enabling regulatory verification and forensic replay</li>
 </ul>
+<p>This boundary ensures that AI systems remain <strong>governable, certifiable, and institutionally trustworthy</strong> — even when using non-deterministic components like LLMs.</p>
 <h3>1.3 The Governance Gap</h3>
 <p>Existing orchestration frameworks (LangChain, LlamaIndex, etc.) operate <strong>inside application code</strong>, where:</p>
 <ul>
