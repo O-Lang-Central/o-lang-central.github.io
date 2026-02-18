@@ -1002,30 +1002,29 @@ O-Lang must enforce execution
 </div>
 <div class="section" id="sec-13">
 <h2>13. System Classification</h2>
-<p>O-Lang is not a developer framework, scripting language, or orchestration engine. It is a <strong>semantic governance protocol</strong> designed for systems-level integration.</p>
+<p>O-Lang is not a developer framework, scripting language, or orchestration engine. It is a <strong>semantic governance protocol</strong> designed for systems-level integration in regulated domains.</p>
 <h3>13.1 What O-Lang Is Not</h3>
 <ul>
-<li><strong>Not a DSL</strong> — O-Lang does not define domain logic or business rules.</li>
-<li><strong>Not an operational workflow engine</strong> — O-Lang operates above traditional workflow engines as a governance layer, providing semantic validation, policy enforcement, and auditability rather than managing execution infrastructure.</li>
-<li><strong>Not a LangChain alternative</strong> — It does not replace developer-facing AI composition tools.</li>
+<li><strong>Not a DSL</strong> — O-Lang does not encode domain logic or business rules; it governs how such logic may be invoked.</li>
+<li><strong>Not an operational workflow engine</strong> — O-Lang does not manage queues, retries, or infrastructure; it validates semantic correctness before any execution occurs.</li>
+<li><strong>Not a LangChain alternative</strong> — It does not replace developer-facing composition tools; it governs their runtime behavior when used in regulated contexts.</li>
 </ul>
 <h3>13.2 What O-Lang Is</h3>
 <ul>
-<li><strong>A semantic execution layer</strong> — Enforces meaning, symbol validity, and intent fidelity across heterogeneous runtimes.</li>
-<li><strong>A governance boundary</strong> — Mediates all external capability invocations with policy, audit, and compliance enforcement.</li>
-<li><strong>An AI systems primitive</strong> — Provides the missing contract between application intent and infrastructure execution in regulated AI environments.</li>
-<li><strong>A minimal, verifiable runtime layer</strong> — The kernel is not "over" an agent framework; it <strong>is</strong> the execution boundary. It replaces ad-hoc orchestration with a governed, auditable protocol.</li>
+<li><strong>A runtime governance boundary</strong> — Enforces separation between AI intent and execution authority via kernel-mediated capability invocation.</li>
+<li><strong>A semantic execution layer</strong> — Validates symbol validity, placeholder resolution, and policy compliance before side effects occur.</li>
+<li><strong>An AI systems primitive</strong> — Provides the missing contract between application intent and infrastructure execution in healthcare, finance, and public-sector AI.</li>
+<li><strong>A minimal, verifiable runtime</strong> — The kernel <em>is</em> the enforcement boundary — not a wrapper around existing agent frameworks.</li>
 </ul>
 <h3>13.3 Non-Goals for v1.1</h3>
 <p>This specification intentionally does not define:</p>
 <ul>
-<li>Capability handler certification</li>
-<li>Package registry governance</li>
-<li>Economic trust or reputation models</li>
+<li>Capability handler certification processes</li>
+<li>Package registry governance models</li>
+<li>Economic trust or reputation mechanisms</li>
 <li>Runtime sandboxing implementation details</li>
 </ul>
-<p>These topics are reserved for future versions under O-Lang Foundation governance.</p>
-<p>This classification ensures correct integration patterns and prevents misuse in contexts where developer-level orchestration is sufficient.</p>
+<p>These topics are reserved for future versions under O-Lang Foundation governance. This narrow scope ensures the protocol remains focused on its core mission: <strong>runtime-enforced separation of intent from execution</strong>.</p>
 </div>
 <div class="section" id="sec-14">
 <h2>14. Final Principle</h2>
