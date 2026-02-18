@@ -244,6 +244,22 @@ z-index: 2000;
 display: block;
 }
 }
+/* Expand main content width for better table fit */
+main {
+  max-width: 1000px; /* Increased from 800px */
+}
+
+/* Ensure table containers respect new width and scroll if needed */
+.table-container {
+  overflow-x: auto;
+  margin: 30px 0;
+  padding: 0 10px; /* Prevents clipping on scroll */
+}
+
+/* Optional: Slightly reduce font size in tables for dense content */
+.table-container table {
+  font-size: 0.92rem;
+}
 </style>
 </head>
 <body>
@@ -398,6 +414,45 @@ Return summary</pre>
 </ul>
 <p><strong>Capabilities are never trusted.</strong><br>
 All capability results are validated by the kernel, not assumed correct.</p>
+
+<!-- 🔴 NEW SECTION 2.4 INSERTED HERE -->
+<h3>2.4 Concrete Domain Example: Healthcare Resource Allocation</h3>
+<p><strong>Scenario:</strong> An AI triage system proposes allocating ICU beds during a public health emergency.</p>
+
+<table style="width:100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem;">
+  <thead>
+    <tr style="background-color: var(--code-bg);">
+      <th style="border:1px solid var(--border); padding:10px; text-align:left;">Step</th>
+      <th style="border:1px solid var(--border); padding:10px; text-align:left;">Action</th>
+      <th style="border:1px solid var(--border); padding:10px; text-align:left;">Kernel Enforcement</th>
+      <th style="border:1px solid var(--border); padding:10px; text-align:left;">Audit Trace</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="border:1px solid var(--border); padding:8px;">1</td>
+      <td style="border:1px solid var(--border); padding:8px;">AI proposes: <code>AllocateICU(patient_id="P789", urgency="critical")</code></td>
+      <td style="border:1px solid var(--border); padding:8px;">Kernel checks: Is <code>AllocateICU</code> in <code>Allow resolvers</code>?</td>
+      <td style="border:1px solid var(--border); padding:8px;"><code>{"step":1, "action":"AllocateICU", "policy":"allowed"}</code></td>
+    </tr>
+    <tr style="background-color: #fef2f2;">
+      <td style="border:1px solid var(--border); padding:8px;">2</td>
+      <td style="border:1px solid var(--border); padding:8px;">Resolver executes: Validates patient exists, ICU capacity &gt; 0</td>
+      <td style="border:1px solid var(--border); padding:8px;">Kernel validates output structure: <code>{ approved: boolean, reason?: string }</code></td>
+      <td style="border:1px solid var(--border); padding:8px;"><code>{"step":2, "symbols_produced":["allocation"], "output":{"approved":false,"reason":"NO_CAPACITY"}}</code></td>
+    </tr>
+    <tr>
+      <td style="border:1px solid var(--border); padding:8px;">3</td>
+      <td style="border:1px solid var(--border); padding:8px;">Workflow attempts: <code>Notify family: "ICU approved"</code></td>
+      <td style="border:1px solid var(--border); padding:8px;">Kernel detects: <code>${allocation.approved} == false</code> → blocks notification</td>
+      <td style="border:1px solid var(--border); padding:8px;"><code>{"step":3, "error":"UNRESOLVED_PLACEHOLDERS", "symbol":"allocation.approved"}</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Outcome:</strong> Non-compliant action (notification without approval) is blocked. Full audit trail generated. No silent failure.</p>
+<p>This example demonstrates O-Lang’s core value: <strong>runtime governance separates AI intent from execution authority</strong>. The AI may propose actions, but the kernel enforces policy before any real-world effect occurs.</p>
+<!-- END NEW SECTION 2.4 -->
 </div>
 <div class="section" id="sec-3">
 <h2>3. Syntax Grammar and Keywords (Normative)</h2>
