@@ -533,48 +533,69 @@ Observed or Missing</pre>
 <ul>
 <li>detect when a symbol is referenced but undefined</li>
 <li>prevent persistence of undefined symbols</li>
-<li>emit warnings for partial execution</li>
+<li>halt execution with <code>UNRESOLVED_PLACEHOLDERS</code> if a placeholder references an undefined symbol</li>
 <li>never fabricate missing values</li>
 </ul>
 </div>
 <p><strong>Undefined ≠ null ≠ empty.</strong></p>
-<h3>4.4 Partial Success</h3>
-<p>O-Lang allows partial workflow success.</p>
+<h3>4.4 Fail-Fast Execution Semantics (Normative)</h3>
+<p>O-Lang enforces <strong>fail-fast semantics</strong> by default. If a step fails to produce a required symbol, any subsequent step that references that symbol will halt with a <code>UNRESOLVED_PLACEHOLDERS</code> error.</p>
 <p><strong>Example:</strong></p>
 <ul>
-<li>Step A succeeds</li>
-<li>Step B fails to produce output</li>
-<li>Step C still executes</li>
+<li>Step A succeeds → produces <code>account_info</code></li>
+<li>Step B fails → <code>account_info</code> remains undefined</li>
+<li>Step C references <code>${account_info.balance}</code> → kernel halts with <code>UNRESOLVED_PLACEHOLDERS</code></li>
+</ul>
+<p>This ensures workflows never proceed with corrupted or incomplete state.</p>
+<h3>4.5 Explicit Partial Success (Normative)</h3>
+<p>Workflows may implement <strong>explicit partial success</strong> using conditional guards:</p>
+<pre>If account_info.exists:
+  Step 2: Ask llm "Balance is ${account_info.balance}"
+Else:
+  Step 3: Notify admin "Account not found"
+EndIf</pre>
+<p>In this pattern:</p>
+<ul>
+<li>Step 1 always executes</li>
+<li>Step 2 executes <strong>only if</strong> <code>account_info.exists</code> is truthy</li>
+<li>Step 3 executes <strong>only if</strong> the condition fails</li>
 </ul>
 <div class="normative">
-<strong>The kernel MUST surface:</strong>
+<strong>The kernel MUST:</strong>
 <ul>
-<li>which symbols are missing</li>
-<li>where they were expected</li>
-<li>what side-effects were skipped</li>
+<li>evaluate conditions against current context</li>
+<li>skip steps whose conditions fail</li>
+<li>execute only one branch of an <code>If/Else</code> block</li>
 </ul>
 </div>
-<h3>4.5 Determinism Boundary (Normative)</h3>
+<p>All execution paths are explicit, auditable, and policy-governed — never implicit or hidden.</p>
+<h3>4.6 Determinism Boundary (Normative)</h3>
 <div class="normative">
 <p>
-Given identical workflow definitions, capability declarations, and capability outputs,
+<strong>Determinism in O-Lang is defined as follows</strong>: Given identical:
+</p>
+<ul>
+<li>workflow definition (including step order, conditions, and <code>Allow resolvers</code> list),</li>
+<li>initial context (input symbols and values),</li>
+<li>resolver implementations (same versions, same behavior on same inputs),
+</li>
+</ul>
+<p>
 all compliant kernels <strong>MUST</strong> produce:
 </p>
 <ul>
-<li>identical symbol presence and absence</li>
-<li>equivalent execution traces</li>
-<li>identical policy decisions</li>
+<li>identical symbol lifecycles (defined vs. undefined),</li>
+<li>equivalent execution traces (step outcomes, policy decisions, error codes),</li>
+<li>identical final output structure.
+</li>
 </ul>
 <p>
-Output content (e.g. LLM-generated text) may differ, but
-<strong>semantic structure MUST NOT</strong>.
+Content-level non-determinism (e.g., LLM-generated text) is permitted, but <strong>structural determinism</strong> (which symbols exist, where failures occur, which resolvers run) <strong>MUST be preserved</strong>. Resolvers that are non-deterministic <strong>MUST declare <code>deterministic: false</code></strong> in their metadata.
 </p>
 </div>
-
-<!-- 🔴 NEW SECTION 4.6 INSERTED HERE -->
-<h3>4.6 Kernel Execution Invariant: Canonical Action Form (Normative)</h3>
+<h3>4.7 Kernel Execution Invariant: Canonical Action Form (Normative)</h3>
 <p>
-The kernel MUST canonicalize surface syntax (<code>Ask</code>, <code>Use</code>) into execution form 
+The kernel MUST canonicalize surface syntax (<code>Ask</code>, <code>Use</code>) into execution form
 (<code>Action</code>) BEFORE dispatching to resolvers.
 </p>
 <div class="normative">
@@ -593,16 +614,35 @@ The kernel MUST canonicalize surface syntax (<code>Ask</code>, <code>Use</code>)
 </ul>
 </div>
 <p>
-<strong>Rationale:</strong> Resolvers are implementation details that should not parse workflow syntax. 
-Canonical form enables deterministic execution traces, prevents resolver coupling to evolving DSL syntax, 
+<strong>Rationale:</strong> Resolvers are implementation details that should not parse workflow syntax.
+Canonical form enables deterministic execution traces, prevents resolver coupling to evolving DSL syntax,
 and enables safe external resolver protocols (HTTP endpoints expect <code>Action</code> prefix).
 </p>
 <p>
-<strong>Violation:</strong> Kernel MUST throw <code>[O-Lang INTERNAL]</code> error before resolver dispatch 
+<strong>Violation:</strong> Kernel MUST throw <code>[O-Lang INTERNAL]</code> error before resolver dispatch
 if invariant broken. This indicates a kernel bug, not workflow authoring error.
 </p>
-<!-- END NEW SECTION 4.6 -->
-
+<h3>4.8 State Transition Semantics (Normative)</h3>
+<p>
+O-Lang workflows execute as a <strong>discrete-state transition system</strong>:
+</p>
+<ul>
+<li><strong>State</strong>: A finite map <code>S = { symbol₁ → value₁, ..., symbolₙ → valueₙ }</code> representing the current context.</li>
+<li><strong>Transition function</strong>: <code>δ : S × Step → S ∪ Error</code>
+  <ul>
+    <li>Each step consumes the current state <code>S</code> and produces a <strong>new state</strong> <code>S'</code> by adding resolved symbols (via <code>Save as</code>) or halting on error.</li>
+    <li>No step mutates existing symbols; all updates are <strong>monotonic additions</strong>.</li>
+  </ul>
+</li>
+<li><strong>Initial state</strong>: <code>S₀ = { input₁ → value₁, ..., inputₖ → valueₖ }</code></li>
+<li><strong>Final state</strong>: <code>S_final</code> after last step, filtered by <code>Return</code> clause.</li>
+</ul>
+<p><strong>Key properties</strong>:</p>
+<ul>
+<li><strong>Monotonicity</strong>: <code>S ⊆ S'</code> — symbols are never removed or overwritten.</li>
+<li><strong>Isolation</strong>: Parallel steps operate on <strong>snapshots</strong> of <code>S</code>, not shared mutable state.</li>
+<li><strong>Observability</strong>: Every transition is logged in the execution trace.</li>
+</ul>
 </div>
 <div class="section" id="sec-5">
 <h2>5. Parallel and Timed Execution Semantics (Normative)</h2>
@@ -615,6 +655,13 @@ if invariant broken. This indicates a kernel bug, not workflow authoring error.
 <li>Merges <strong>only successfully resolved symbols</strong> into post-block context</li>
 <li>Sets <code>timed_out = true</code> if any step was cancelled</li>
 </ol>
+<p><strong>Concurrency model</strong>: Parallel steps execute <strong>logically simultaneously</strong> but <strong>physically asynchronously</strong>. The kernel guarantees:</p>
+<ul>
+<li>No shared mutable state between steps (each receives an immutable snapshot of context),</li>
+<li>Deterministic merge order (symbols merged in declaration order, not completion order),</li>
+<li>Bounded execution (timeout enforces liveness).</li>
+</ul>
+<p>Thus, parallel execution is deterministic if and only if all invoked resolvers are deterministic.</p>
 <h3>5.2 Symbol Merge Rules</h3>
 <ul>
 <li><strong>Resolved symbol</strong>: included in final context</li>
@@ -688,18 +735,16 @@ Every capability MUST expose a static declaration document describing its behavi
 <li>Undeclared behavior is a semantic violation</li>
 </ul>
 </div>
-
-<!-- 🔴 NEW SECTION 6.6 INSERTED HERE -->
 <h3>6.6 Resolver Safety Contract (Normative)</h3>
 <p>
-<strong>Context:</strong> A <em>resolver</em> is any external component (database, API, sensor, LLM, 
-or custom service) that produces values for workflow symbols. In conventional systems, resolvers 
-are called <em>tools</em> (LangChain), <em>nodes</em> (n8n), or <em>functions</em> (OpenAI). 
-In O-lang, resolvers execute <em>outside</em> the kernel and <em>must</em> honor explicit failure 
+<strong>Context:</strong> A <em>resolver</em> is any external component (database, API, sensor, LLM,
+or custom service) that produces values for workflow symbols. In conventional systems, resolvers
+are called <em>tools</em> (LangChain), <em>nodes</em> (n8n), or <em>functions</em> (OpenAI).
+In O-lang, resolvers execute <em>outside</em> the kernel and <em>must</em> honor explicit failure
 semantics — never fabricating data or silently falling back to hardcoded values when inputs are invalid.
 </p>
 <p>
-Resolvers MUST honor explicit failure semantics — never fabricating data or silently falling back 
+Resolvers MUST honor explicit failure semantics — never fabricating data or silently falling back
 to hardcoded values when inputs are invalid.
 </p>
 <div class="normative">
@@ -708,6 +753,7 @@ to hardcoded values when inputs are invalid.
 <li>Fail explicitly with structured errors when inputs are missing/invalid</li>
 <li>Include actionable diagnostics (paths, expected schema, working directory)</li>
 <li>Preserve determinism: same inputs → same outputs (including errors)</li>
+<li>Treat each invocation as atomic: Either return a valid <code>output</code> or a structured <code>error</code> — never partial success, silent fallbacks, or side effects on failure.</li>
 </ul>
 <strong>Resolvers MUST NOT:</strong>
 <ul>
@@ -719,28 +765,27 @@ to hardcoded values when inputs are invalid.
 </ul>
 </div>
 <p>
-<strong>Rationale:</strong> Silent fallbacks turn configuration errors into data corruption errors. 
-They violate determinism, destroy auditability, and create unacceptable risk in safety-critical domains 
+<strong>Rationale:</strong> Silent fallbacks turn configuration errors into data corruption errors.
+They violate determinism, destroy auditability, and create unacceptable risk in safety-critical domains
 (finance, healthcare, government).
 </p>
 <p>
-<strong>Example violation (implicit retry + fallback):</strong> 
-Resolver receives valid <code>customer_id: 12345</code> → DB times out → resolver internally retries 3× → 
-still fails → returns hardcoded <code>balance: 5000</code> with no error. 
+<strong>Example violation (implicit retry + fallback):</strong>
+Resolver receives valid <code>customer_id: 12345</code> → DB times out → resolver internally retries 3× →
+still fails → returns hardcoded <code>balance: 5000</code> with no error.
 Execution trace shows <code>balance: DEFINED</code> — failure is structurally invisible.
 </p>
 <p>
 <strong>Compliant pattern (explicit workflow retry):</strong>
-Resolver fails immediately on first timeout → returns <code>DATABASE_TIMEOUT</code> → 
-kernel halts with <code>balance: UNDEFINED</code> → workflow's explicit <code>Loop count=3</code> 
-directive commands retry → trace shows <code>attempt_1: UNDEFINED</code>, 
-<code>attempt_2: UNDEFINED</code>, <code>attempt_3: DEFINED (2500)</code>. 
+Resolver fails immediately on first timeout → returns <code>DATABASE_TIMEOUT</code> →
+kernel halts with <code>balance: UNDEFINED</code> → workflow's explicit <code>Loop count=3</code>
+directive commands retry → trace shows <code>attempt_1: UNDEFINED</code>,
+<code>attempt_2: UNDEFINED</code>, <code>attempt_3: DEFINED (2500)</code>.
 All retry decisions are auditable and bounded.
 </p>
 <p>
 See <a href="#appendix-a">Appendix A</a> for detailed execution trace comparison and cross-domain applicability.
 </p>
-<!-- END UPDATED SECTION 6.6 -->
 </div>
 <div class="section" id="sec-7">
 <h2>7. Runtime Observability</h2>
@@ -913,6 +958,7 @@ O-Lang must enforce execution
 <li><strong>A semantic execution layer</strong> — Enforces meaning, symbol validity, and intent fidelity across heterogeneous runtimes.</li>
 <li><strong>A governance boundary</strong> — Mediates all external capability invocations with policy, audit, and compliance enforcement.</li>
 <li><strong>An AI systems primitive</strong> — Provides the missing contract between application intent and infrastructure execution in regulated AI environments.</li>
+<li><strong>A minimal, verifiable runtime layer</strong> — The kernel is not "over" an agent framework; it <strong>is</strong> the execution boundary. It replaces ad-hoc orchestration with a governed, auditable protocol.</li>
 </ul>
 <h3>13.3 Non-Goals for v1.1</h3>
 <p>This specification intentionally does not define:</p>
@@ -956,23 +1002,44 @@ Every conformance test MUST reference one or more normative clauses in this spec
 No test may assert behavior not explicitly defined herein.
 </p>
 </div>
-</main>
-<!-- 🔴 APPENDIX A INSERTED HERE (after Section 15, before footer) -->
+<div class="section" id="sec-16">
+<h2>16. Formal Semantics Summary (Informative)</h2>
+<p>
+O-Lang can be modeled as a <strong>guarded transition system</strong>:
+</p>
+<ul>
+<li><strong>States</strong>: <code>Context ∈ Symbol ⇀ Value</code></li>
+<li><strong>Actions</strong>: <code>Step ∈ { Action, Ask, Use, ... }</code></li>
+<li><strong>Transitions</strong>: <code>Context → Context</code> via resolver-mediated updates</li>
+<li><strong>Guards</strong>: <code>If</code> conditions, <code>Allow resolvers</code>, <code>Constraint</code> clauses</li>
+<li><strong>Final states</strong>: Defined by <code>Return</code> clause</li>
+</ul>
+<p>
+This model ensures:
+</p>
+<ul>
+<li><strong>Safety</strong>: No transition occurs without explicit declaration.</li>
+<li><strong>Liveness</strong>: Timeouts prevent infinite hangs.</li>
+<li><strong>Auditability</strong>: Every transition is observable.</li>
+</ul>
+<p>
+Unlike Turing-complete agent frameworks, O-Lang <strong>constrains expressivity to enforce governance</strong> — making it suitable for regulated domains.
+</p>
+</div>
 <div class="section" id="appendix-a">
 <h2>Appendix A: Failure Handling Patterns — Explicit vs Implicit Retries (Informative)</h2>
 <p>
-<strong>Terminology bridge:</strong> In O-lang, a <em>resolver</em> is any external component that produces symbol values 
-— equivalent to <em>tools</em> in LangChain, <em>nodes</em> in n8n, <em>functions</em> in OpenAI Assistants, or 
-<em>sensors/actuators</em> in IoT systems. The critical distinction is not naming, but <strong>where failure 
+<strong>Terminology bridge:</strong> In O-lang, a <em>resolver</em> is any external component that produces symbol values
+— equivalent to <em>tools</em> in LangChain, <em>nodes</em> in n8n, <em>functions</em> in OpenAI Assistants, or
+<em>sensors/actuators</em> in IoT systems. The critical distinction is not naming, but <strong>where failure
 handling occurs</strong>: conventional systems embed retry…enforces failure visibility <em>outside</em> tools at the kernel boundary (governance-level).
 </p>
 <p>
-<strong>Domain applicability note:</strong> The examples below use a financial balance-check scenario for concrete 
-illustration, but the safety principles apply universally across domains including healthcare diagnostics, 
-IoT sensor fusion, government service delivery, agritech monitoring, and any system where transient infrastructure 
+<strong>Domain applicability note:</strong> The examples below use a financial balance-check scenario for concrete
+illustration, but the safety principles apply universally across domains including healthcare diagnostics,
+IoT sensor fusion, government service delivery, agritech monitoring, and any system where transient infrastructure
 failures must not result in silent data fabrication.
 </p>
-
 <h3>A.1 Execution Trace Comparison: Explicit Workflow Retries Preserve Auditability</h3>
 <table style="width:100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem;">
 <thead>
@@ -1035,10 +1102,9 @@ failures must not result in silent data fabrication.
 </tbody>
 </table>
 <p style="font-style: italic; color: var(--gray); margin-top: 0.5rem;">
-Trace always shows: <code>attempt_1: UNDEFINED</code> → <code>attempt_2: UNDEFINED</code> → <code>attempt_3: DEFINED (2500)</code>. 
+Trace always shows: <code>attempt_1: UNDEFINED</code> → <code>attempt_2: UNDEFINED</code> → <code>attempt_3: DEFINED (2500)</code>.
 No path exists for silent corruption.
 </p>
-
 <h3>A.2 Critical Distinctions: Where Retry Authority Resides</h3>
 <table style="width:100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem;">
 <thead>
@@ -1082,13 +1148,12 @@ No path exists for silent corruption.
 </tbody>
 </table>
 <p>
-<strong>Why this matters in connectivity-constrained environments:</strong> In settings where network flakiness is the norm 
-(not the exception) — Nigerian USSD banking, rural IoT deployments, edge healthcare diagnostics — conventional systems 
-that "gracefully degrade" by fabricating values aren't graceful. They're <strong>structurally unsafe</strong>. 
+<strong>Why this matters in connectivity-constrained environments:</strong> In settings where network flakiness is the norm
+(not the exception) — Nigerian USSD banking, rural IoT deployments, edge healthcare diagnostics — conventional systems
+that "gracefully degrade" by fabricating values aren't graceful. They're <strong>structurally unsafe</strong>.
 O-Lang's explicit-retry model ensures temporary unavailability is preferable to permanent corruption.
 </p>
 </div>
-<!-- END APPENDIX A -->
 <footer>
 <p>
 © 2026 O-Lang Protocol. Open specification licensed under Apache 2.0.
@@ -1097,7 +1162,7 @@ O-Lang's explicit-retry model ensures temporary unavailability is preferable to 
 </p>
 <div class="success" style="margin-top: 1rem; padding: 0.75rem; font-size: 0.875rem;">
 <strong>Review Note:</strong> This specification is open for technical review until March 1, 2026.<br>
-Feedback on clarity, consistency, and testability is welcome in the 
+Feedback on clarity, consistency, and testability is welcome in the
 <a href="https://github.com/O-lang-Central/olang-spec/discussions/1" target="_blank">public RFC discussion</a>.<br>
 <strong>No new semantics will be accepted</strong> — v1.2 will consider structural changes via formal RFC.
 </div>
