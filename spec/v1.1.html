@@ -592,15 +592,22 @@ Constraint: tools=["search", "calc"]</pre>
 </div>
 <div class="section" id="sec-4">
 <h2>4. Semantic Execution Model (Normative)</h2>
+
 <h3>4.1 Symbols</h3>
 <p>A symbol is any named value referenced in a workflow:</p>
 <ul>
-<li>inputs</li>
-<li>step outputs (<code>Save as</code>)</li>
-<li>emitted values</li>
-<li>persisted values</li>
+  <li>inputs</li>
+  <li>step outputs (<code>Save as</code>)</li>
+  <li>emitted values</li>
+  <li>persisted values</li>
 </ul>
-<p>Symbols are tracked explicitly by the kernel.</p>
+<p>
+  Symbols are tracked explicitly by the kernel. A symbol is either <strong>defined</strong> — it
+  exists with a concrete value — or <strong>undefined</strong> — it was referenced but never
+  produced. There is no third state. <code>null</code>, empty string, and zero are defined values.
+  Absence is always explicit.
+</p>
+
 <h3>4.2 Symbol Lifecycle</h3>
 <pre>Declared / Referenced
 ↓
@@ -611,26 +618,33 @@ Available in Context
 Consumed or Persisted
 ↓
 Observed or Missing</pre>
+
 <h3>4.3 Semantic Enforcement Rules</h3>
 <div class="normative">
-<strong>The kernel MUST:</strong>
-<ul>
-<li>detect when a symbol is referenced but undefined</li>
-<li>prevent persistence of undefined symbols</li>
-<li>halt execution with <code>UNRESOLVED_PLACEHOLDERS</code> if a placeholder references an undefined symbol</li>
-<li>never fabricate missing values</li>
-</ul>
+  <strong>The kernel MUST:</strong>
+  <ul>
+    <li>detect when a symbol is referenced but undefined</li>
+    <li>prevent persistence of undefined symbols</li>
+    <li>halt execution with <code>UNRESOLVED_PLACEHOLDERS</code> if a placeholder references an undefined symbol</li>
+    <li>never fabricate missing values</li>
+  </ul>
 </div>
 <p><strong>Undefined ≠ null ≠ empty.</strong></p>
+
 <h3>4.4 Fail-Fast Execution Semantics (Normative)</h3>
-<p>O-Lang enforces <strong>fail-fast semantics</strong> by default. If a step fails to produce a required symbol, any subsequent step that references that symbol will halt with a <code>UNRESOLVED_PLACEHOLDERS</code> error.</p>
+<p>
+  O-Lang enforces <strong>fail-fast semantics</strong> by default. If a step fails to produce a
+  required symbol, any subsequent step that references that symbol MUST halt with an
+  <code>UNRESOLVED_PLACEHOLDERS</code> error.
+</p>
 <p><strong>Example:</strong></p>
 <ul>
-<li>Step A succeeds → produces <code>account_info</code></li>
-<li>Step B fails → <code>account_info</code> remains undefined</li>
-<li>Step C references <code>${account_info.balance}</code> → kernel halts with <code>UNRESOLVED_PLACEHOLDERS</code></li>
+  <li>Step A succeeds → produces <code>account_info</code></li>
+  <li>Step B fails → <code>account_info</code> remains undefined</li>
+  <li>Step C references <code>${account_info.balance}</code> → kernel halts with <code>UNRESOLVED_PLACEHOLDERS</code></li>
 </ul>
 <p>This ensures workflows never proceed with corrupted or incomplete state.</p>
+
 <h3>4.5 Explicit Partial Success (Normative)</h3>
 <p>Workflows may implement <strong>explicit partial success</strong> using conditional guards:</p>
 <pre>If account_info.exists:
@@ -640,93 +654,210 @@ Else:
 EndIf</pre>
 <p>In this pattern:</p>
 <ul>
-<li>Step 1 always executes</li>
-<li>Step 2 executes <strong>only if</strong> <code>account_info.exists</code> is truthy</li>
-<li>Step 3 executes <strong>only if</strong> the condition fails</li>
+  <li>Step 1 always executes</li>
+  <li>Step 2 executes <strong>only if</strong> <code>account_info.exists</code> is truthy</li>
+  <li>Step 3 executes <strong>only if</strong> the condition fails</li>
 </ul>
 <div class="normative">
-<strong>The kernel MUST:</strong>
-<ul>
-<li>evaluate conditions against current context</li>
-<li>skip steps whose conditions fail</li>
-<li>execute only one branch of an <code>If/Else</code> block</li>
-</ul>
+  <strong>The kernel MUST:</strong>
+  <ul>
+    <li>evaluate conditions against current context</li>
+    <li>skip steps whose conditions fail</li>
+    <li>execute only one branch of an <code>If/Else</code> block</li>
+  </ul>
 </div>
 <p>All execution paths are explicit, auditable, and policy-governed — never implicit or hidden.</p>
+
 <h3>4.6 Determinism Boundary (Normative)</h3>
+<p>
+  O-Lang defines two formally distinct classes of determinism that MUST be treated independently
+  by all compliant kernels.
+</p>
+
+<h4>4.6.1 Structural Determinism (Required)</h4>
 <div class="normative">
-<p>
-<strong>Determinism in O-Lang is defined as follows</strong>: Given identical:
-</p>
-<ul>
-<li>workflow definition (including step order, conditions, and <code>Allow resolvers</code> list),</li>
-<li>initial context (input symbols and values),</li>
-<li>resolver implementations (same versions, same behavior on same inputs),
-</li>
-</ul>
-<p>
-all compliant kernels <strong>MUST</strong> produce:
-</p>
-<ul>
-<li>identical symbol lifecycles (defined vs. undefined),</li>
-<li>equivalent execution traces (step outcomes, policy decisions, error codes),</li>
-<li>identical final output structure.
-</li>
-</ul>
-<p>
-Content-level non-determinism (e.g., LLM-generated text) is permitted, but <strong>structural determinism</strong> (which symbols exist, where failures occur, which resolvers run) <strong>MUST be preserved</strong>. Resolvers that are non-deterministic <strong>MUST declare <code>deterministic: false</code></strong> in their metadata.
-</p>
+  <p><strong>Determinism in O-Lang is defined as follows:</strong> Given identical:</p>
+  <ul>
+    <li>workflow definition (including step order, conditions, and <code>Allow resolvers</code> list),</li>
+    <li>initial context (input symbols and values),</li>
+    <li>resolver implementations (same versions, same behavior on same inputs),</li>
+  </ul>
+  <p>all compliant kernels <strong>MUST</strong> produce:</p>
+  <ul>
+    <li>identical symbol lifecycles (defined vs. undefined),</li>
+    <li>equivalent execution traces (step outcomes, policy decisions, error codes),</li>
+    <li>identical final output structure.</li>
+  </ul>
+  <p>
+    Structural determinism is a hard requirement. It is what makes O-Lang workflows replayable,
+    auditable, and verifiable across kernel implementations.
+  </p>
 </div>
+
+<h4>4.6.2 Content Determinism (Not Required)</h4>
+<p>
+  Content-level outputs from probabilistic resolvers — such as LLM-generated text — are explicitly
+  exempt from determinism requirements. The kernel makes no assertion about whether a P-resolver
+  (see §4.6.3) produces identical content across executions.
+</p>
+<p>
+  The critical distinction: <strong>O-Lang governs the execution envelope around probabilistic
+  reasoning, not the reasoning itself.</strong>
+</p>
+
+<h4>4.6.3 P-Resolver Classification (Normative)</h4>
+<p>
+  A resolver MUST be classified as a <strong>P-resolver</strong> (probabilistic resolver) if its
+  outputs are content-nondeterministic given identical inputs — that is, two invocations with
+  identical inputs may produce semantically different outputs.
+</p>
+<div class="normative">
+  <strong>P-resolvers MUST declare <code>deterministic: false</code> in their resolver metadata.</strong>
+  <p>The kernel's obligations when invoking a P-resolver are:</p>
+  <ul>
+    <li>
+      <strong>Structural determinism is preserved</strong> — the kernel applies identical governance
+      checks, in identical order, under identical conditions, regardless of resolver output content.
+    </li>
+    <li>
+      <strong>Output validation is content-agnostic</strong> — the kernel validates output structure
+      and schema compliance only, never content correctness.
+    </li>
+    <li>
+      <strong>Audit trail records the P-resolver classification</strong> alongside the execution
+      record — enabling downstream consumers to distinguish governed probabilistic outputs from
+      governed deterministic outputs.
+    </li>
+  </ul>
+</div>
+<p>
+  <strong>Formal consequence:</strong> Execution determinism and content determinism are formally
+  independent properties in O-Lang. A workflow invoking P-resolvers is structurally deterministic
+  even though its outputs are content-nondeterministic.
+</p>
+
 <h3>4.7 Kernel Execution Invariant: Canonical Action Form (Normative)</h3>
 <p>
-The kernel MUST canonicalize surface syntax (<code>Ask</code>, <code>Use</code>) into execution form
-(<code>Action</code>) BEFORE dispatching to resolvers.
+  The kernel MUST canonicalize surface syntax (<code>Ask</code>, <code>Use</code>) into execution
+  form (<code>Action</code>) BEFORE dispatching to resolvers.
 </p>
 <div class="normative">
-<strong>The kernel MUST:</strong>
-<ul>
-<li>Transform <code>Ask &lt;resolver&gt; ...</code> → <code>Action &lt;resolver&gt; ...</code></li>
-<li>Transform <code>Use &lt;resolver&gt; ...</code> → <code>Action &lt;resolver&gt; ...</code></li>
-<li>Preserve resolver boundary integrity (exactly one space after <code>Action</code>)</li>
-<li>Reject non-canonical actions with explicit error BEFORE resolver dispatch</li>
-</ul>
-<strong>The kernel MUST NOT:</strong>
-<ul>
-<li>Pass surface syntax (<code>Ask ...</code>) directly to resolvers</li>
-<li>Allow resolver name bleed (e.g., <code>"resolver-a resolver-b"</code>)</li>
-<li>Silently recover from malformed actions</li>
-</ul>
+  <strong>The kernel MUST:</strong>
+  <ul>
+    <li>Transform <code>Ask &lt;resolver&gt; ...</code> → <code>Action &lt;resolver&gt; ...</code></li>
+    <li>Transform <code>Use &lt;resolver&gt; ...</code> → <code>Action &lt;resolver&gt; ...</code></li>
+    <li>Preserve resolver boundary integrity (exactly one space after <code>Action</code>)</li>
+    <li>Reject non-canonical actions with explicit error BEFORE resolver dispatch</li>
+  </ul>
+  <strong>The kernel MUST NOT:</strong>
+  <ul>
+    <li>Pass surface syntax (<code>Ask ...</code>) directly to resolvers</li>
+    <li>Allow resolver name bleed (e.g., <code>"resolver-a resolver-b"</code>)</li>
+    <li>Silently recover from malformed actions</li>
+  </ul>
 </div>
 <p>
-<strong>Rationale:</strong> Resolvers are implementation details that should not parse workflow syntax.
-Canonical form enables deterministic execution traces, prevents resolver coupling to evolving DSL syntax,
-and enables safe external resolver protocols (HTTP endpoints expect <code>Action</code> prefix).
+  <strong>Rationale:</strong> Resolvers are implementation details that should not parse workflow
+  syntax. Canonical form enables deterministic execution traces, prevents resolver coupling to
+  evolving DSL syntax, and enables safe external resolver protocols (HTTP endpoints expect
+  <code>Action</code> prefix).
 </p>
 <p>
-<strong>Violation:</strong> Kernel MUST throw <code>[O-Lang INTERNAL]</code> error before resolver dispatch
-if invariant broken. This indicates a kernel bug, not workflow authoring error.
+  <strong>Violation:</strong> Kernel MUST throw <code>[O-Lang INTERNAL]</code> error before
+  resolver dispatch if invariant is broken. This indicates a kernel bug, not a workflow authoring
+  error.
 </p>
+
 <h3>4.8 State Transition Semantics (Normative)</h3>
+<p>O-Lang workflows execute as a <strong>discrete-state transition system</strong>.</p>
+
+<h4>4.8.1 Sequential Execution</h4>
+<p>The transition function for sequential steps is defined as:</p>
+<pre>δ : S × Step → S ∪ Error</pre>
 <p>
-O-Lang workflows execute as a <strong>discrete-state transition system</strong>:
+  Each step consumes the current state <code>S</code> and produces a new state <code>S'</code> by
+  adding resolved symbols via <code>Save as</code>, or halting on error. No step mutates existing
+  symbols — all updates are <strong>monotonic additions</strong>: <code>S ⊆ S'</code>.
 </p>
+
+<h4>4.8.2 Parallel Execution</h4>
+<p>The transition function for parallel blocks is defined as:</p>
+<pre>δ‖ : S × {Step₁ ‖ Step₂ ‖ ... ‖ Stepₙ} → S ∪ Error</pre>
+<p>
+  Parallel execution is governed by four rules that together preserve structural determinism across
+  all compliant kernel implementations:
+</p>
+<div class="normative">
+  <p>
+    <strong>Rule 1 — Snapshot Isolation:</strong> Each parallel step Stepᵢ receives an immutable
+    snapshot <code>Sᵢ = S</code> taken at the moment the parallel block is entered. No step reads
+    writes produced by sibling steps during execution. The snapshot is fixed and immutable for the
+    lifetime of the parallel block.
+  </p>
+  <p>
+    <strong>Rule 2 — Declaration-Order Merge:</strong> On completion, all successfully resolved
+    symbols are merged into <code>S'</code> in workflow declaration order, not completion order.
+    Declaration order is fixed at parse time and is independent of physical execution timing.
+    This is the primary mechanism by which parallel execution preserves structural determinism.
+  </p>
+  <p>
+    <strong>Rule 3 — Conflict Resolution:</strong> If two parallel steps attempt to produce the
+    same symbol name, the step declared earlier in the workflow takes precedence. The later step's
+    value is discarded and a <code>SYMBOL_CONFLICT</code> warning is emitted in the execution
+    trace. Kernels MUST NOT silently overwrite an earlier step's symbol with a later step's value.
+  </p>
+  <p>
+    <strong>Rule 4 — Partial Completion:</strong> If one or more parallel steps fail or time out,
+    successfully resolved symbols from completing steps are still merged into <code>S'</code>
+    according to Rules 2 and 3. Failed steps produce no symbols. <code>timed_out = true</code> is
+    set if any step was cancelled by timeout. Execution proceeds to the next sequential step.
+  </p>
+</div>
+
+<h4>4.8.3 Parallel Determinism Guarantee</h4>
+<div class="normative">
+  <p>
+    Two compliant kernels executing the same parallel block with identical inputs and resolver
+    implementations MUST always produce identical symbol stores <code>S'</code>, regardless of
+    the physical order or wall-clock timing in which parallel steps complete.
+  </p>
+  <p>
+    This guarantee holds because symbol merge order is determined by workflow declaration (fixed
+    at parse time), not by runtime completion order (which is physically nondeterministic). The
+    parallel block's nondeterminism is timing-only — its output is structurally deterministic.
+  </p>
+</div>
+
+<h4>4.8.4 State Boundaries</h4>
 <ul>
-<li><strong>State</strong>: A finite map <code>S = { symbol₁ → value₁, ..., symbolₙ → valueₙ }</code> representing the current context.</li>
-<li><strong>Transition function</strong>: <code>δ : S × Step → S ∪ Error</code>
-  <ul>
-    <li>Each step consumes the current state <code>S</code> and produces a <strong>new state</strong> <code>S'</code> by adding resolved symbols (via <code>Save as</code>) or halting on error.</li>
-    <li>No step mutates existing symbols; all updates are <strong>monotonic additions</strong>.</li>
-  </ul>
-</li>
-<li><strong>Initial state</strong>: <code>S₀ = { input₁ → value₁, ..., inputₖ → valueₖ }</code></li>
-<li><strong>Final state</strong>: <code>S_final</code> after last step, filtered by <code>Return</code> clause.</li>
+  <li><strong>Initial state:</strong> <code>S₀ = { input₁ → value₁, ..., inputₖ → valueₖ }</code></li>
+  <li><strong>Final state:</strong> <code>S_final</code> after last step, filtered by <code>Return</code> clause.</li>
 </ul>
-<p><strong>Key properties</strong>:</p>
+
+<h4>4.8.5 Key Properties</h4>
 <ul>
-<li><strong>Monotonicity</strong>: <code>S ⊆ S'</code> — symbols are never removed or overwritten.</li>
-<li><strong>Isolation</strong>: Parallel steps operate on <strong>snapshots</strong> of <code>S</code>, not shared mutable state.</li>
-<li><strong>Observability</strong>: Every transition is logged in the execution trace.</li>
+  <li>
+    <strong>Monotonicity:</strong> <code>S ⊆ S'</code> — symbols are never removed or overwritten
+    across both sequential and parallel execution.
+  </li>
+  <li>
+    <strong>Snapshot Isolation:</strong> Parallel steps operate on immutable snapshots of
+    <code>S</code>, never on shared mutable state.
+  </li>
+  <li>
+    <strong>Declaration-Order Determinism:</strong> Merge order is fixed at parse time, independent
+    of runtime timing.
+  </li>
+  <li>
+    <strong>Bounded Execution:</strong> Timeout enforces liveness — no parallel block may execute
+    indefinitely.
+  </li>
+  <li>
+    <strong>Observability:</strong> Every transition — sequential or parallel — is logged in the
+    execution trace. No transition is silent.
+  </li>
 </ul>
+
 </div>
 <div class="section" id="sec-5">
 <h2>5. Parallel and Timed Execution Semantics (Normative)</h2>
